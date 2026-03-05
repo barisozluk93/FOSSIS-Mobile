@@ -1,0 +1,30 @@
+{
+  "name": "fossis-mobile",
+  "version": "1.0.0",
+  "description": "This is FOSSIS project",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "npm test",
+    "prepare": "husky install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:barisozluk93/FOSSIS-Mobile.git"
+  },
+  "author": "Barış Özlük",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/barisozluk93/FOSSIS-Mobile/issues"
+  },
+  "homepage": "https://github.com/barisozluk93/FOSSIS-Mobile#readme",
+  "devDependencies": {
+    "husky": "^7.0.0",
+    "lint-staged": "^13.0.3"
+  },
+  "lint-staged": {
+    "source/**/*.js": ["npx eslint -c source/eslint.config.js"],
+    "source-expo/**/*.js": ["npx eslint -c source-expo/.eslintrc.js"]
+  }
+}

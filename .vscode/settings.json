@@ -1,0 +1,10 @@
+{
+    "eslint.enable": true,
+    "eslint.workingDirectories": [ "./source", "./source-expo" ],
+    "editor.tabSize": 2,
+    "editor.formatOnSave": false,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit"
+    }
+}
