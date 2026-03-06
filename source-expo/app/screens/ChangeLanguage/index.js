@@ -147,7 +147,7 @@ export default function ChangeLanguage({ navigation }) {
                             : {}
                         }
                       >
-                        {Utils.languageFromCode(item)}
+                        {t(Utils.languageFromCode(item))}
                       </Text>
                       <Text grayColor style={{ textTransform: 'uppercase', fontSize: 10 }}>
                         {item}

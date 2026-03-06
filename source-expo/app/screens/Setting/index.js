@@ -111,27 +111,8 @@ export default function Setting({ isShowHeader = true }) {
               }}
               ComponentRight={
                 <Text body1 grayColor>
-                  {Utils.languageFromCode(i18n.language)}
+                  {t(Utils.languageFromCode(i18n.language))}
                 </Text>
-              }
-            />
-            <Item
-              title={t('theme')}
-              iconName="palette"
-              iconBackground={BaseColor.greenColor}
-              onPress={() => {
-                navigation.navigate('ThemeSetting');
-              }}
-              ComponentRight={
-                <View
-                  style={[
-                    styles.themeIcon,
-                    {
-                      backgroundColor: colors.primary,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                />
               }
             />
             <Item
@@ -167,13 +148,6 @@ export default function Setting({ isShowHeader = true }) {
               iconBackground={BaseColor.pinkDarkColor}
               contentStyle={{ paddingVertical: 10 }}
               ComponentRight={<Switch size={18} onValueChange={toggleSwitch} value={reminders} />}
-            />
-            <Item
-              title={t('Display intro screen')}
-              iconName="teamspeak"
-              iconBackground={BaseColor.kashmir}
-              contentStyle={{ paddingVertical: 10 }}
-              ComponentRight={<Switch onValueChange={onChangeIntro} value={intro} />}
             />
             <Item
               isBorder={false}

@@ -5,7 +5,7 @@ import Icon from '@/components/Icon';
 import ModalOption from '@/components/ModalOption';
 import Tag from '@/components/Tag';
 
-const PSelectOption = ({ title = 'Type', options = EOptions, value = [], onPress = () => {} }) => {
+const PSelectOption = ({ title = 'Type', isMulti: isMulti, options = EOptions, value = [], onPress = () => {} }) => {
   const { colors } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -22,7 +22,7 @@ const PSelectOption = ({ title = 'Type', options = EOptions, value = [], onPress
         <Icon name="chevron-down" color={colors.text} size={10} />
       </Tag>
       <ModalOption
-        isMulti={true}
+        isMulti={isMulti}
         value={value}
         options={options}
         isVisible={modalVisible}

@@ -176,14 +176,15 @@ export const ThemeSupport = [
  * Define default theme use for whole application
  */
 export const DefaultTheme = {
-  theme: 'pink',
+
+  theme: 'green',
   light: {
     dark: false,
     colors: {
-      primary: '#FF2D55',
-      primaryDark: '#F90030',
-      primaryLight: '#FF5E80',
-      accent: '#4A90A4',
+      primary: '#58D68D',
+      primaryDark: '#388E3C',
+      primaryLight: '#C8E6C9',
+      accent: '#607D8B',
       background: 'white',
       card: '#F5F5F5',
       text: '#212121',
@@ -193,10 +194,10 @@ export const DefaultTheme = {
   dark: {
     dark: true,
     colors: {
-      primary: '#FF2D55',
-      primaryDark: '#F90030',
-      primaryLight: '#FF5E80',
-      accent: '#4A90A4',
+      primary: '#58D68D',
+      primaryDark: '#388E3C',
+      primaryLight: '#C8E6C9',
+      accent: '#607D8B',
       background: '#010101',
       card: '#121212',
       text: '#e5e5e7',
@@ -224,7 +225,7 @@ export const useTheme = () => {
   const forceDark = useSelector((state) => state.application.force_dark);
   const themeStorage = useSelector((state) => state.application.theme);
   const listTheme = ThemeSupport.filter((item) => item.theme === themeStorage);
-  const theme = listTheme.length > 0 ? listTheme[0] : DefaultTheme;
+  const theme = DefaultTheme;
 
   if (forceDark) {
     return { theme: theme.dark, colors: theme.dark.colors };

@@ -176,6 +176,10 @@ export { default as PSelectOption } from './PSelectOption';
 export { default as PButtonAddUser } from './PButtonAddUser';
 // Ticket
 export { default as Ticket } from './Ticket';
+export { default as PermissionTicket } from './PermissionTicket';
+export { default as RoleTicket } from './RoleTicket';
+export { default as UserTicket } from './UserTicket';
+export { default as MaterialTicket } from './MaterialTicket';
 
 // List
 export { default as GridList } from './GridList';

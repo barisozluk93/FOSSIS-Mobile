@@ -10,27 +10,31 @@ import PFilter from '@/screens/PFilter';
 import Profile from '@/screens/Profile';
 import PSelectAssignee from '@/screens/PSelectAssignee';
 import { tabBarIcon, tabBarIconHaveNoty, BottomTabNavigatorMazi } from '@/navigation/components';
+import PUser from '@/screens/PUser';
+import UserFilter from '@/screens/UserFilter';
+import PMaterial from '@/screens/PMaterial';
+import MaterialFilter from '@/screens/MaterialFilter';
 
 export const NewsTabScreens = {
-  PHome: {
-    component: PHome,
+  User: {
+    component: PUser,
     options: {
-      title: 'home',
-      tabBarIcon: ({ color }) => tabBarIcon({ color, name: 'home' }),
+      title: 'usermanagement',
+      tabBarIcon: ({ color }) => tabBarIcon({ color, name: 'users' }),
+    },
+  },
+  Material: {
+    component: PMaterial,
+    options: {
+      title: 'materialmanagement',
+      tabBarIcon: ({ color }) => tabBarIconHaveNoty({ color, name: 'boxes' }),
     },
   },
   Project: {
-    component: PProject,
-    options: {
-      title: 'project',
-      tabBarIcon: ({ color }) => tabBarIcon({ color, name: 'briefcase' }),
-    },
-  },
-  Tasks: {
     component: PTask,
     options: {
-      title: 'tasks',
-      tabBarIcon: ({ color }) => tabBarIconHaveNoty({ color, name: 'tasks' }),
+      title: 'projectmanagement',
+      tabBarIcon: ({ color }) => tabBarIconHaveNoty({ color, name: 'briefcase' }),
     },
   },
   Profile: {
@@ -77,6 +81,18 @@ export default {
   },
   PFilter: {
     component: PFilter,
+    options: {
+      title: 'filter',
+    },
+  },
+  UserFilter: {
+    component: UserFilter,
+    options: {
+      title: 'filter',
+    },
+  },
+  MaterialFilter: {
+    component: MaterialFilter,
     options: {
       title: 'filter',
     },

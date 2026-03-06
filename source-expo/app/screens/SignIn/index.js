@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TouchableOpacity, View, KeyboardAvoidingView, Platform } from 'react-native';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { BaseColor, BaseStyle, useTheme } from '@/config';
-import { AuthActions } from '@/actions';
-import { Button, Header, Icon, SafeAreaView, Text, TextInput } from '@/components';
+import { BaseColor, BaseStyle, Images, useTheme } from '@/config';
+import { Button, Header, Image, SafeAreaView, Text, TextInput } from '@/components';
 import styles from './styles';
+import { getUserByToken, login } from '@/actions/auth';
+import { loadToken } from '@/utils/storage';
+import Toast from 'react-native-toast-message';
+import { isNullOrEmpty } from '@/utils/utility';
 
-const { authentication } = AuthActions;
 const successInit = {
   id: true,
   password: true,
@@ -18,29 +20,55 @@ const SignIn = (props) => {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const dispatch = useDispatch();
-  const [id, setId] = useState('test');
-  const [password, setPassword] = useState('123456');
-  const [loading, setLoading] = useState(false);
+  const [id, setId] = useState();
+  const [password, setPassword] = useState();
   const [success, setSuccess] = useState(successInit);
+  const { error, token, isPaymentRequired } = useSelector((state) => state.auth);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    var access_token = loadToken();
+    if (!access_token) {
+      dispatch({ type: "AUTH_LOGOUT" });
+      dispatch({ type: "USER_INIT" });
+    }
+  }, [navigation]);
+
+  useEffect(() => {
+    if (token) {
+      dispatch(getUserByToken());
+
+      setTimeout(() => {
+        setLoading(false);        
+          navigation.navigate('ProjectMenu');
+      }, 500)
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (error) {
+      Toast.show({
+        type: 'error',
+        text1: t('error'),
+        text2: t('error_login_message'),
+      });
+
+      setLoading(false);
+    }
+  }, [error]);
 
   const onLogin = () => {
-    if (id === '' || password === '') {
+    
+    if (!isNullOrEmpty(id) && !isNullOrEmpty(password)) {
+      setLoading(true);
+      dispatch(login(id, password));
+    }
+    else{
       setSuccess({
         ...success,
-        id: false,
-        password: false,
+        id: !isNullOrEmpty(id) ? true : false,
+        password: !isNullOrEmpty(password) ? true : false
       });
-    } else {
-      setLoading(true);
-      dispatch(
-        authentication(true, (response) => {
-          if (response.success && id === 'test' && password === '123456') {
-            navigation.navigate('Profile');
-          } else {
-            setLoading(false);
-          }
-        })
-      );
     }
   };
 
@@ -54,12 +82,14 @@ const SignIn = (props) => {
       <Header
         title={t('sign_in')}
         renderLeft={() => {
-          return <Icon name="angle-left" size={20} color={colors.primary} enableRTL={true} />;
         }}
         onPressLeft={() => {
-          navigation.goBack();
         }}
       />
+
+      <View style={{ alignItems: 'center', marginTop: 50 }}>
+          <Image source={Images.logo} style={styles.logo} resizeMode="contain" />
+        </View>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -72,14 +102,8 @@ const SignIn = (props) => {
           <TextInput
             style={[BaseStyle.textInput]}
             onChangeText={(text) => setId(text)}
-            onFocus={() => {
-              setSuccess({
-                ...success,
-                id: true,
-              });
-            }}
             autoCorrect={false}
-            placeholder={t('input_id')}
+            placeholder={t('email_address')}
             placeholderTextColor={success.id ? BaseColor.grayColor : colors.primary}
             value={id}
             selectionColor={colors.primary}
@@ -87,14 +111,8 @@ const SignIn = (props) => {
           <TextInput
             style={[BaseStyle.textInput, { marginTop: 10 }]}
             onChangeText={(text) => setPassword(text)}
-            onFocus={() => {
-              setSuccess({
-                ...success,
-                password: true,
-              });
-            }}
             autoCorrect={false}
-            placeholder={t('input_password')}
+            placeholder={t('password')}
             secureTextEntry={true}
             placeholderTextColor={success.password ? BaseColor.grayColor : colors.primary}
             value={password}
@@ -112,7 +130,7 @@ const SignIn = (props) => {
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+            <TouchableOpacity onPress={() => navigation.navigate('SignUp',  { isStandByPage: false, isProfilePage: false })}>
               <Text body2 primaryColor>
                 {t('not_have_account')}
               </Text>

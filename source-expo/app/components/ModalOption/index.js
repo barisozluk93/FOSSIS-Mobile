@@ -13,8 +13,8 @@ const ModalOption = (props) => {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const cardColor = colors.card;
-  const { options = [], value = {}, onPress, isMulti = false, ...attrs } = props;
-  const [optionCustom, setOptionCustom] = useState(options);
+  const { options = [], value = [], onPress, isMulti = false, ...attrs } = props;
+  const [optionCustom, setOptionCustom] = useState([]);
 
   useEffect(() => {
     if (isMulti) {
@@ -26,11 +26,11 @@ const ModalOption = (props) => {
     } else {
       const optionsSingle = options.map((item) => ({
         ...item,
-        checked: item.value === value?.value,
+        checked: item.value === value?.[0]?.value,
       }));
       setOptionCustom(optionsSingle);
     }
-  }, []);
+  }, [options, value, isMulti]);
 
   const onApply = () => {
     onPress(optionCustom.filter((item) => item.checked));
@@ -40,19 +40,15 @@ const ModalOption = (props) => {
     if (isMulti) {
       const optionsMulti = optionCustom.map((item) => ({
         ...item,
-        checked: item.value === itemChose.value ? !itemChose.checked : item.checked,
+        checked: item.value === itemChose.value ? !item.checked : item.checked,
       }));
       setOptionCustom(optionsMulti);
     } else {
-      // const optionsSingle = optionCustom.map((item) => ({
-      //     ...item,
-      //     checked:
-      //         item.value === itemChose.value
-      //             ? !itemChose.checked
-      //             : false,
-      // }));
-      // setOptionCustom(optionsSingle);
-      onPress(itemChose);
+      const optionsSingle = optionCustom.map((item) => ({
+        ...item,
+        checked: item.value === itemChose.value,
+      }));
+      setOptionCustom(optionsSingle);
     }
   };
 
@@ -62,13 +58,14 @@ const ModalOption = (props) => {
         <View style={styles.contentSwipeDown}>
           <View style={styles.lineSwipeDown} />
         </View>
+
         {optionCustom.map((item, index) => (
           <TouchableOpacity
             style={[
               styles.contentActionModalBottom,
               {
                 borderBottomColor: colors.border,
-                borderBottomWidth: index === options.length - 1 ? 0 : StyleSheet.hairlineWidth,
+                borderBottomWidth: index === optionCustom.length - 1 ? 0 : StyleSheet.hairlineWidth,
               },
             ]}
             key={item.value}
@@ -90,17 +87,17 @@ const ModalOption = (props) => {
                 />
               )}
               <Text body2 primaryColor={item.checked}>
-                {t(item.text)}
+                {item.text}
               </Text>
             </View>
+
             {item.checked && <Icon name="check" size={14} color={colors.primary} />}
           </TouchableOpacity>
         ))}
-        {isMulti && (
-          <Button full style={{ marginTop: 10, marginBottom: 20 }} onPress={onApply}>
-            {t('apply')}
-          </Button>
-        )}
+
+        <Button full style={{ marginTop: 10, marginBottom: 20 }} onPress={onApply}>
+          {t('apply')}
+        </Button>
       </View>
     </Modal>
   );
