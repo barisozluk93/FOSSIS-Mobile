@@ -1,5 +1,4 @@
 {
-  "location": "Location",
   "apply": "Uygula",
   "filter": "Filtre",
   "reviews": "Reviews",
@@ -205,7 +204,6 @@
   "weekly": "Weekly",
   "monthly": "Monthly",
   "yearly": "Yearly",
-  "type": "Type",
   "date": "Date",
   "please_input_the_memo": "Please input the memo",
   "attachment": "Attachment",
@@ -484,5 +482,33 @@
   "heatpumps": "Isı Pompaları",
   "constructions": "Konstruksiyonlar",
   "cables": "Kablolar",
-  "evchargingstations": "Elektrikli Şarj İstasyonları"
+  "evchargingstations": "Elektrikli Şarj İstasyonları",
+  "roofarea": "Çatı Alanı",
+  "location": "Lokasyon",
+  "panel": "Panel",
+  "margin": "Köşe Boşluğu",
+  "gridspace": "Panel Boşluğu",
+  "manufacturer": "Üretici",
+  "dcpower": "DC Güç",
+  "acpower": "AC Güç",
+  "capacity": "Kapasite",
+  "cop": "COP",
+  "power": "Güç",
+  "type": "Tipi",
+  "structuretype": "Yapı Tipi",
+  "technology": "Teknoloji",
+  "panelorientation": "Panel Yönü",
+  "zoom": "Yakınlık",
+  "langitude": "Enlem",
+  "latitude": "Boylam",
+  "select_location": "Bina Seç",
+  "select_location_message": "Haritadan bir bina seçin. Vazgeçmek için butona basınız.",
+  "main_infos": "Ana Bilgiler",
+  "roof_style": "Çatı Stili",
+  "planning": "Planlama",
+  "draw_roof_message": "Lütfen, binaya ait çatı modellemesini yapınız veya iptal etmek için 'İptal' tuşuna basınız. (Polygon bitirmek için çift tıklayın.)",
+  "finish_drawing": "Çizimi Bitir",
+  "roof_area": "Çatı Alanı"
+
+
 }

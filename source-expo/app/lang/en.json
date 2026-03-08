@@ -1,5 +1,4 @@
 {
-  "location": "Location",
   "apply": "Apply",
   "filter": "Filter",
   "reviews": "Reviews",
@@ -482,6 +481,32 @@
   "heatpumps": "Heat Pumps",
   "constructions": "Constructions",
   "cables": "Cables",
-  "evchargingstations": "EV Charging Stations"
-  
+  "evchargingstations": "EV Charging Stations",
+  "roofarea": "Roof Area",
+  "location": "Location",
+  "panel": "Panel",
+  "margin": "Margin",
+  "gridspace": "Grid Space",
+  "manufacturer": "Manufacturer",
+  "dcpower": "DC Power",
+  "acpower": "AC Power",
+  "capacity": "Capacity",
+  "cop": "COP",
+  "power": "Power",
+  "structuretype": "Structure Type",
+  "technology": "Technology",
+  "panelorientation": "Panel Orientation",
+  "zoom": "Zoom",
+  "longitude": "Longitude",
+  "latitude": "Latitude",
+  "select_location": "Select Building",
+  "select_location_message": "Select a building from the map. Press the button to cancel.",
+  "main_infos": "Main Informations",
+  "roof_style": "Roof Syle",
+  "planning": "Planning",
+  "draw_roof_message": "Please create the roof model for the building or press 'Cancel' button to cancel. (Double-click to finish the polygon.)",
+  "finish_drawing": "Finish Drawing",
+  "roof_area": "Roof Area"
+
+
 }

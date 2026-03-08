@@ -11,6 +11,7 @@ import ConstructionReducer from './construction';
 import CableReducer from './cable';
 import PanelReducer from './panel';
 import ChargingstationReducer from './chargingstation';
+import ProjectReducer from './project';
 
 export default combineReducers({
   auth: AuthReducer,
@@ -24,5 +25,6 @@ export default combineReducers({
   construction: ConstructionReducer,
   cable: CableReducer,
   chargingstation: ChargingstationReducer,
+  project: ProjectReducer,
   application: ApplicationReducer,
 });

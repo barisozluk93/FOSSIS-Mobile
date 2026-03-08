@@ -1,29 +1,39 @@
 import { StyleSheet } from 'react-native';
-import { BaseColor } from '@/config';
 
 export default StyleSheet.create({
-  contain: {
-    padding: 20,
-    paddingTop: 0,
-    width: '100%',
-  },
-  textInput: {
-    height: 46,
-    backgroundColor: BaseColor.fieldColor,
-    borderRadius: 5,
-    marginTop: 10,
-    padding: 10,
-    width: '100%',
+  container: {
+    flex: 1,
   },
   map: {
-    ...StyleSheet.absoluteFillObject,
+    flex: 1,
   },
-  title: {
-    marginTop: 20,
-    marginBottom: 5,
+  zoomControls: {
+    position: "absolute",
+    right: 16,
+    top: 100,
+    gap: 10,
   },
-  wrapContent: {
-    flexWrap: 'wrap',
-    flexDirection: 'row',
+  zoomButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  zoomText: {
+    fontSize: 22,
+    fontWeight: "bold",
+  },
+  infoBar: {
+    position: "absolute",
+    left: '25%',
+    right: 16,
+    bottom: 24,
+    borderRadius: 10,
+    padding: 10,
+    width: "50%"
+  },
+  infoText: {
+    fontSize: 14,
   },
 });

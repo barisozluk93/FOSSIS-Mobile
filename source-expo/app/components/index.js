@@ -13,6 +13,7 @@ export { default as BookingTime } from './BookingTime';
 export { default as PlaceItem } from './PlaceItem';
 export { default as SearchBox } from './SearchBox';
 export { default as ModalFilter } from './ModalFilter';
+export { default as ModalProject } from './ModalProject';
 export { default as ShopCard1 } from './ShopCard1';
 export { default as PaymentBankItem } from './Product/PaymentBankItem';
 export { default as MonthYearPicker } from './MonthYearPicker';
@@ -180,6 +181,7 @@ export { default as PermissionTicket } from './PermissionTicket';
 export { default as RoleTicket } from './RoleTicket';
 export { default as UserTicket } from './UserTicket';
 export { default as MaterialTicket } from './MaterialTicket';
+export { default as ProjectTicket } from './ProjectTicket';
 
 // List
 export { default as GridList } from './GridList';

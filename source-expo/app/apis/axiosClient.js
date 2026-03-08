@@ -30,69 +30,58 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-api.interceptors.request.use(
-  async config => {
-    const token = await loadToken();
-    if (token) {
-      config.headers = config.headers || {};
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  error => Promise.reject(error)
+api.interceptors.request.use(async (config) => {
+  const token = await loadToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+},
+  (error) => Promise.reject(error)
 );
 
 
 api.interceptors.response.use(
-  response => response,
+  (response) => response,
 
-  async error => {
+  async (error) => {
     const originalRequest = error.config;
 
-    if (
-      error.response?.status === 401 &&
-      !originalRequest?._retry &&
-      !originalRequest?.url?.includes('/auth')
-    ) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       if (isRefreshing) {
-        return new Promise((resolve, reject) => {
+        return new Promise(function (resolve, reject) {
           failedQueue.push({ resolve, reject });
-        }).then(token => {
-          originalRequest.headers = originalRequest.headers || {};
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return api(originalRequest);
-        });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = "Bearer " + token;
+            return api(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
       }
+
 
       isRefreshing = true;
 
       try {
+        const accessToken = await loadToken();
         const refreshToken = await loadRefreshToken();
-        if (!refreshToken) {
-          throw new Error('Refresh token yok');
+        if (!accessToken || !refreshToken) {
+          throw new Error("No access or refresh token");
         }
 
-        const authResponse = await refreshTokenRequest(refreshToken);
-        console.log('Token yenileme başarılı:', authResponse);
+        // Refresh isteği
+        const authResponse = await refreshTokenRequest(accessToken, refreshToken);
         await saveToken(authResponse);
-
-        api.defaults.headers.common.Authorization =
-          `Bearer ${authResponse.accessToken}`;
-
+        api.defaults.headers.Authorization = "Bearer " + authResponse.accessToken;
         processQueue(null, authResponse.accessToken);
-
-        originalRequest.headers = originalRequest.headers || {};
-        originalRequest.headers.Authorization =
-          `Bearer ${authResponse.accessToken}`;
-
         return api(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
+      } catch (err) {
+        processQueue(err, null);
         await removeToken();
-        rootNavigation.navigate('NewsMenu');
-        return Promise.reject(refreshError);
+        rootNavigation.navigate('SignIn');
+        return Promise.reject(err);
       } finally {
         isRefreshing = false;
       }

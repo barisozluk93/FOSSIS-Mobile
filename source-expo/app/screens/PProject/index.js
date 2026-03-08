@@ -1,87 +1,50 @@
-import { useState } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import { useCallback, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { FlatList, ScrollView, View } from 'react-native';
-import { PProject, PProjectType, PTaskPriority, PTaskStatus, PProjectAction } from '@/data';
+import { FlatList, TouchableOpacity, View } from 'react-native';
 import { BaseColor, BaseStyle, useTheme } from '@/config';
-import * as Utils from '@/utils';
-import { Header, Icon, Project01, PSelectOption, SafeAreaView, Tag, Text, ModalOption } from '@/components';
-import styles from './styles';
+import { Header, Icon, Project01, SafeAreaView, Tag, Text, ModalOption, ProjectTicket } from '@/components';
+import { StyleSheet } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { pagingProject } from '@/actions/project';
 
-const PHome = () => {
-  const navigation = useNavigation();
+const PProject = (props) => {
+  const { navigation } = props;
   const { t } = useTranslation();
+  const dispatch = useDispatch();
   const { colors } = useTheme();
-  const [type, setType] = useState([]);
-  const [status, setStatus] = useState([]);
-  const [priority, setPriority] = useState([]);
-  const [sort, setSort] = useState('sort');
-  const [projects, setProjects] = useState(PProject);
   const [showAction, setShowAction] = useState(false);
+  const { projects, page, totalPages, searchTerm, loading } = useSelector(state => state.project);
+  const [currentPage, setCurrentPage] = useState(1);
+  const { user } = useSelector(state => state.user);
+  const [selectedItem, setSelectedIdtem] = useState(undefined);
 
-  const goProjectDetail = (item) => {
-    navigation.navigate('PProjectView', { item: item });
+  const fetchProjects = () => {
+    dispatch(pagingProject(currentPage, 5, searchTerm, user ? user.id : 0));
+  }
+
+  useFocusEffect(
+      useCallback(() => {
+        fetchProjects();        
+        return () => {
+          dispatch({ type: 'PROJECT_INIT' });
+        };
+      }, [currentPage, searchTerm])
+    );
+
+  const onFilter = () => {
+    navigation.navigate('ProjectFilter');
   };
 
-  const handleSort = () => {
-    const projectsInline = [...PProject];
-    projectsInline.sort((a, b) => {
-      var priorityA = a.id;
-      var priorityB = b.id;
-      if (priorityB < priorityA) {
-        return sort === 'caret-down' ? -1 : 1;
-      }
-      if (priorityB > priorityA) {
-        return sort === 'caret-down' ? 1 : -1;
-      }
-
-      return 0;
-    });
-    return projectsInline;
-  };
-
-  const onSort = () => {
-    Utils.enableExperimental();
-    switch (sort) {
-      case 'sort':
-        setProjects(handleSort());
-        setSort('caret-down');
-        break;
-      case 'caret-down':
-        setProjects(handleSort());
-        setSort('caret-up');
-        break;
-      case 'caret-up':
-        setProjects(PProject);
-        setSort('sort');
-        break;
-      default:
-        setProjects(PProject);
-        setSort('sort');
-        break;
+  const onItemSelected = (item) => {
+    setShowAction(false);
+    if(item.value === 1) {
+      navigation.navigate('PProjectCreate', { item: selectedItem });
     }
-  };
+    else{
 
-  const onFilter = (data) => {
-    if (data.length > 0) {
-      setProjects(PProject.filter((item) => item.id <= data.length));
-    } else {
-      setProjects(PProject);
     }
-  };
-
-  const onChangeType = (typeInline) => {
-    onFilter(typeInline);
-    setType(typeInline);
-  };
-  const onChangePriority = (typeInline) => {
-    onFilter(typeInline);
-    setPriority(typeInline);
-  };
-  const onChangeStatus = (typeInline) => {
-    onFilter(typeInline);
-    setStatus(typeInline);
-  };
+  }
 
   return (
     <SafeAreaView style={[BaseStyle.safeAreaView, { backgroundColor: colors.card }]} edges={['right', 'top', 'left']}>
@@ -99,39 +62,67 @@ const PHome = () => {
           navigation.navigate('PProjectCreate');
         }}
       />
-      <View style={[styles.filter, { borderColor: colors.border }]}>
-        <Tag
-          gray
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingVertical: 16,
+          paddingLeft: 8,
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomColor: colors.border,
+        }}
+      >
+        <View style={{ flex: 1, alignItems: "flex-start" }}>
+          <Tag
+            gray
+            style={{
+              borderRadius: 3,
+              backgroundColor: colors.primary,
+              paddingVertical: 3,
+            }}
+            textStyle={{
+              paddingHorizontal: 4,
+              fontSize: 15,
+              color: BaseColor.whiteColor,
+            }}
+            icon={<Icon name="filter" color={BaseColor.whiteColor} size={15} />}
+            onPress={() => onFilter()}
+          >
+            {t("filter")}
+          </Tag>
+        </View>
+        {projects && projects.length > 0 && !loading && <View
           style={{
-            borderRadius: 3,
-            backgroundColor: BaseColor.kashmir,
-            marginHorizontal: 5,
-            paddingVertical: 3,
+            position: "absolute",
+            left: 0,
+            right: 0,
+            flexDirection: "row",
+            justifyContent: "center",
+            alignItems: "center",
           }}
-          textStyle={{
-            paddingHorizontal: 4,
-            color: BaseColor.whiteColor,
-          }}
-          icon={<Icon name={sort} color={BaseColor.whiteColor} size={10} />}
-          onPress={onSort}
         >
-          {t('sort')}
-        </Tag>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false}>
-          <PSelectOption title={t('type')} options={PProjectType} value={type} onPress={(item) => onChangeType(item)} />
-          <PSelectOption
-            title={t('priority')}
-            options={PTaskPriority}
-            value={priority}
-            onPress={(item) => onChangePriority(item)}
-          />
-          <PSelectOption
-            title={t('status')}
-            options={PTaskStatus}
-            value={status}
-            onPress={(item) => onChangeStatus(item)}
-          />
-        </ScrollView>
+          <TouchableOpacity
+            disabled={page === 1}
+            onPress={() => setCurrentPage(page - 1)}
+            style={{ marginHorizontal: 6, opacity: page === 1 ? 0.4 : 1 }}
+          >
+            <Text style={{ paddingVertical: 2.5, borderRadius: 8, height: 25, textAlign: "center", color: colors.text, fontSize: 16 }}>‹ {t('prev')}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity disabled={true}>
+            <Text style={{ paddingVertical: 1.75, borderRadius: 8, width: 30, height: 25, textAlign: "center", color: BaseColor.whiteColor, backgroundColor: colors.primary, fontSize: 16 }}>
+              {page}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            disabled={page === totalPages}
+            onPress={() => setCurrentPage(page + 1)}
+            style={{ marginHorizontal: 6, opacity: page === totalPages ? 0.4 : 1 }}
+          >
+            <Text style={{ paddingVertical: 2.5, borderRadius: 8, height: 25, textAlign: "center", color: colors.text, fontSize: 16 }}>{t('next')} ›</Text>
+          </TouchableOpacity>
+        </View>}
       </View>
       <FlatList
         contentContainerStyle={{ backgroundColor: colors.card }}
@@ -140,38 +131,39 @@ const PHome = () => {
         data={projects}
         keyExtractor={(_item, index) => index.toString()}
         renderItem={({ item }) => (
-          <Project01
-            title={item.title}
-            description={item.description}
-            status={item.status}
-            tasks={item.tasks}
-            comments={item.comments}
-            tickets={item.tickets}
-            completedTickets={item.completedTickets}
-            members={item.members}
-            onPress={() => goProjectDetail(item)}
-            onOption={() => setShowAction(true)}
+          <ProjectTicket
+            id={item.id}
+            name={item.name}
+            status={!item.isDeleted ? 'active' : 'passive'}
+            location={item.location}
+            panel={item.panel ? item.panel.model + " - " + item.panel.series : undefined}
+            roofArea={item.roofArea}
+            margin={item.margin}
+            gridSpace={item.gridSpace}
+            onOption={(item) => { setSelectedIdtem(projects.filter(f => f.id == item)[0]); setShowAction(true);}}
             style={{
               paddingBottom: 20,
               marginBottom: 15,
-              backgroundColor: 'white',
             }}
           />
         )}
       />
       <ModalOption
         value={{}}
-        options={PProjectAction}
+        options={[
+          {value: 1, text: t('edit')},
+          {value: 2, text: t('delete')}
+        ]}
         isVisible={showAction}
         onSwipeComplete={() => {
           setShowAction(false);
         }}
-        onPress={() => {
-          setShowAction(false);
+        onPress={(item) => {
+          onItemSelected(item);
         }}
       />
     </SafeAreaView>
   );
 };
 
-export default PHome;
+export default PProject;

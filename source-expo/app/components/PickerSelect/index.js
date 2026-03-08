@@ -5,7 +5,7 @@ import Icon from '@/components/Icon';
 import Text from '@/components/Text';
 import ModalFilter from './ModalFilter';
 
-const PickerSelect = ({ label = '', options = [], value = {}, onChange = () => {} }) => {
+const PickerSelect = ({ style = undefined, label = '', options = [], value = {}, onChange = () => {} }) => {
   const { colors } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -25,7 +25,7 @@ const PickerSelect = ({ label = '', options = [], value = {}, onChange = () => {
         style={{
           borderWidth: StyleSheet.hairlineWidth,
           borderRadius: 5,
-          borderColor: colors.border,
+          borderColor: style ? style.border : colors.border,
           padding: 10,
           flexDirection: 'row',
           alignItems: 'center',

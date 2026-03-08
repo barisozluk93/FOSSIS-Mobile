@@ -1,33 +1,49 @@
 {
   "expo": {
-    "name": "fossis-mobile",
-    "slug": "fossis-mobile",
+    "name": "FOSSIS",
+    "slug": "FOSSIS",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logo.png",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#FFFFFF"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
+      "icon": "./assets/logo.png",
       "supportsTablet": true,
-      "bundleIdentifier": "com.klcsoft.fossismobile"
+      "bundleIdentifier": "com.klcsoft.fossis",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#FFFFFF"
-      }
+      },
+      "package": "com.klcsoft.fossis"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-font"],
-    "newArchEnabled": true
+    "plugins": [
+      "expo-font",
+       [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsVersion": "11.19.0"
+        }
+      ]
+    ],
+    "newArchEnabled": true,
+    "owner": "barisozluk"
   }
 }

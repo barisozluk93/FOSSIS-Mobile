@@ -14,6 +14,7 @@ import PUser from '@/screens/PUser';
 import UserFilter from '@/screens/UserFilter';
 import PMaterial from '@/screens/PMaterial';
 import MaterialFilter from '@/screens/MaterialFilter';
+import ProjectFilter from '@/screens/ProjectFilter';
 
 export const NewsTabScreens = {
   User: {
@@ -31,7 +32,7 @@ export const NewsTabScreens = {
     },
   },
   Project: {
-    component: PTask,
+    component: PProject,
     options: {
       title: 'projectmanagement',
       tabBarIcon: ({ color }) => tabBarIconHaveNoty({ color, name: 'briefcase' }),
@@ -93,6 +94,12 @@ export default {
   },
   MaterialFilter: {
     component: MaterialFilter,
+    options: {
+      title: 'filter',
+    },
+  },
+  ProjectFilter: {
+    component: ProjectFilter,
     options: {
       title: 'filter',
     },

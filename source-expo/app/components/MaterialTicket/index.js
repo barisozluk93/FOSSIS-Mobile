@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { useTranslation } from 'react-i18next';
 import { TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { BaseColor, useTheme } from '@/config';
-import Avatars from '@/components/Avatars';
 import Icon from '@/components/Icon';
 import Tag from '@/components/Tag';
 import Text from '@/components/Text';
@@ -31,12 +30,12 @@ const MaterialTicket = ({
     switch (status) {
       case 'active':
         return {
-          nameStatus: t(status),
+          nameStatus: t('active'),
           statusColor: BaseColor.greenColor,
         };
       case 'passive':
         return {
-          nameStatus: t(status),
+          nameStatus: t('passive'),
           statusColor: BaseColor.pinkDarkColor,
         };
       default:
@@ -45,29 +44,35 @@ const MaterialTicket = ({
           statusColor: BaseColor.greenColor,
         };
     }
-  }, [status]);
+  }, [status, t]);
+
+  const renderField = (labelKey, icon, value, suffix = '') =>
+    value ? (
+      <View style={styles.field}>
+        <Text style={styles.label}>{t(labelKey)}</Text>
+        <Text caption2 light style={styles.value}>
+          <Icon name={icon} solid /> {value}
+          {suffix}
+        </Text>
+      </View>
+    ) : null;
 
   return (
     <View style={[styles.contain, style]}>
       <View style={{ flex: 1 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+
+        {/* HEADER */}
+        <View style={styles.headerRow}>
           <TouchableOpacity style={{ flex: 1 }}>
             <Text headline numberOfLines={2}>
               {title}
             </Text>
           </TouchableOpacity>
-          <View
-            style={{
-              flexDirection: 'row',
-              paddingTop: 5,
-              paddingBottom: 5,
-            }}
-          >
+
+          <View style={styles.statusWrapper}>
             <Tag
               light
-              textStyle={{
-                color: BaseColor.whiteColor,
-              }}
+              textStyle={{ color: BaseColor.whiteColor }}
               style={{
                 backgroundColor: statusColor,
                 paddingHorizontal: 10,
@@ -78,96 +83,30 @@ const MaterialTicket = ({
             </Tag>
           </View>
         </View>
-        {manufacturer && <Text
-          caption2
-          light
-          style={{
-            paddingTop: 10,
-          }}
-        >
-          <Icon name="industry" solid />&nbsp;{manufacturer}
-        </Text>}
-        {type && <Text
-          caption2
-          light
-          style={{
-            paddingTop: 10,
-          }}
-        >
-          <Icon name="list" solid />&nbsp;{type}
-        </Text>}
-        {structureType && <Text
-          caption2
-          light
-          style={{
-            paddingTop: 10,
-          }}
-        >
-          <Icon name="list" solid />&nbsp;{structureType}
-        </Text>}
-        {technology && <Text
-          caption2
-          light
-          style={{
-            paddingTop: 10,
-          }}
-        >
-          <Icon name="list" solid />&nbsp;{technology}
-        </Text>}
-        {panelOrientation && <Text
-          caption2
-          light
-          style={{
-            paddingTop: 10,
-          }}
-        >
-          <Icon name="compass" solid />&nbsp;{panelOrientation}
-        </Text>}
-        {maximumDCPower && <Text
-          caption2
-          light
-          style={{
-            paddingTop: 10,
-          }}
-        >
-            <Icon name="battery-full" solid />{maximumDCPower} kW
-        </Text>}
-        {nominalACPower && <Text
-          caption2
-          light
-          style={{
-            paddingTop: 10,
-          }}
-        >
-            <Icon name="battery-full" solid />{nominalACPower} kW
-        </Text>}
-        {nominalCapacity && <Text
-          caption2
-          light
-          style={{
-            paddingTop: 10,
-          }}
-        >
-            <Icon name="battery-full" solid />{nominalCapacity} kW
-        </Text>}
-        {cop && <Text
-          caption2
-          light
-          style={{
-            paddingTop: 10,
-          }}
-        >
-            <Icon name="battery-full" solid />{cop} kW
-        </Text>}
-        {power && <Text
-          caption2
-          light
-          style={{
-            paddingTop: 10,
-          }}
-        >
-            <Icon name="battery-full" solid />{power} kW
-        </Text>}
+
+        {/* CONTENT */}
+        <View style={styles.contentRow}>
+
+          {/* LEFT */}
+          <View style={styles.leftColumn}>
+            {renderField('manufacturer', 'industry', manufacturer)}
+            {renderField('dcpower', 'battery-full', maximumDCPower, ' kW')}
+            {renderField('acpower', 'battery-full', nominalACPower, ' kW')}
+            {renderField('capacity', 'battery-full', nominalCapacity, ' kW')}
+            {renderField('cop', 'battery-full', cop)}
+            {renderField('power', 'battery-full', power, ' kW')}
+          </View>
+
+          {/* RIGHT */}
+          <View style={styles.rightColumn}>
+            {renderField('type', 'list', type)}
+            {renderField('structuretype', 'list', structureType)}
+            {renderField('technology', 'microchip', technology)}
+            {renderField('panelorientation', 'compass', panelOrientation)}
+          </View>
+
+        </View>
+
         <View
           style={[
             styles.footer,
@@ -175,8 +114,7 @@ const MaterialTicket = ({
               borderColor: colors.border,
             },
           ]}
-        >
-        </View>
+        />
       </View>
     </View>
   );

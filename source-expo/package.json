@@ -19,6 +19,9 @@
     "@react-navigation/material-bottom-tabs": "^6.2.2",
     "@react-navigation/native": "^6.0.11",
     "@react-navigation/stack": "^6.2.2",
+    "@rnmapbox/maps": "^10.2.10",
+    "@turf/area": "^7.3.4",
+    "@turf/helpers": "^7.3.4",
     "axios": "^1.13.2",
     "expo": "^54.0.0",
     "expo-av": "~16.0.8",
@@ -71,6 +74,7 @@
     "redux-thunk": "2.4.1",
     "rn-placeholder": "^3.0.3",
     "rn-range-slider": "^2.0.4",
+    "turf": "^3.0.14",
     "url": "^0.11.0"
   },
   "devDependencies": {

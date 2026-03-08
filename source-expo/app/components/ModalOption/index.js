@@ -33,7 +33,7 @@ const ModalOption = (props) => {
   }, [options, value, isMulti]);
 
   const onApply = () => {
-    onPress(optionCustom.filter((item) => item.checked));
+    onPress(optionCustom.filter((item) => item.checked)[0]);
   };
 
   const onSelect = (itemChose) => {

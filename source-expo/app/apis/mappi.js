@@ -1,12 +1,8 @@
 import api from "./axiosClient";
 
-export const uploadRequest = async (formData) => {
+export const getBuildingsRequest = async (formData) => {
 
-  const response = await api.post("File/Save", formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+  const response = await api.get("Map/GetBuildings")
   return response.data;
 };
 
