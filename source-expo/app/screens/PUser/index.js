@@ -62,14 +62,16 @@ const PUser = () => {
   useFocusEffect(
     useCallback(() => {
 
-      if (type[0].value === 1) {
-        fetchUsers();
-      }
-      else if (type[0].value === 2) {
-        fetchRoles();
-      }
-      else if (type[0].value === 3) {
-        fetchPermissions();
+      if(type && type[0]) {
+        if (type[0].value === 1) {
+          fetchUsers();
+        }
+        else if (type[0].value === 2) {
+          fetchRoles();
+        }
+        else if (type[0].value === 3) {
+          fetchPermissions();
+        }
       }
 
       return () => {
@@ -85,7 +87,7 @@ const PUser = () => {
   };
 
   const onChangeType = (typeInline) => {
-    setType(typeInline);
+    setType([typeInline]);
     setCurrentPage(1);
   };
 
@@ -164,7 +166,7 @@ const PUser = () => {
               {t("filter")}
             </Tag>
           </View>
-          {type && type[0].value === 1 && users && users.length > 0 && !userLoading && <View
+          {type && type[0] &&  type[0].value === 1 && users && users.length > 0 && !userLoading && <View
             style={{
               position: "absolute",
               left: 0,
@@ -197,7 +199,7 @@ const PUser = () => {
             </TouchableOpacity>
           </View>}
 
-          {type && type[0].value === 2 && roles && roles.length > 0 && !roleLoading && <View
+          {type && type[0] && type[0].value === 2 && roles && roles.length > 0 && !roleLoading && <View
             style={{
               position: "absolute",
               left: 0,
@@ -230,7 +232,7 @@ const PUser = () => {
             </TouchableOpacity>
           </View>}
 
-          {type && type[0].value === 3 && permissions && permissions.length > 0 && !permissionLoading && <View
+          {type && type[0] && type[0].value === 3 && permissions && permissions.length > 0 && !permissionLoading && <View
             style={{
               position: "absolute",
               left: 0,
@@ -266,9 +268,9 @@ const PUser = () => {
 
       {(userLoading || roleLoading || permissionLoading) && <ActivityIndicator color={colors.primary} size={"large"} style={{ flex: 1 }}></ActivityIndicator>}
 
-      {type && (type[0].value === 1 && !userLoading && users && users.length === 0) && <NotFound />}
+      {type && type[0] && (type[0].value === 1 && !userLoading && users && users.length === 0) && <NotFound />}
 
-      {type && type[0].value === 1 && !userLoading && users && users.length > 0 && 
+      {type && type[0] && type[0].value === 1 && !userLoading && users && users.length > 0 && 
       <FlatList
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
@@ -288,9 +290,9 @@ const PUser = () => {
         )}
       />}
 
-      {type && (type[0].value === 2 && !roleLoading && roles && roles.length === 0) && <NotFound />}
+      {type && type[0] && (type[0].value === 2 && !roleLoading && roles && roles.length === 0) && <NotFound />}
 
-      {type && type[0].value === 2 && !roleLoading && roles && roles.length > 0 && <FlatList
+      {type && type[0] && type[0].value === 2 && !roleLoading && roles && roles.length > 0 && <FlatList
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
         data={roles}
@@ -308,9 +310,9 @@ const PUser = () => {
       />}
 
       
-      {type && (type[0].value === 3 && !permissionLoading && permissions && permissions.length === 0) && <NotFound />}
+      {type && type[0] && (type[0].value === 3 && !permissionLoading && permissions && permissions.length === 0) && <NotFound />}
 
-      {type && type[0].value === 3 && !permissionLoading && permissions && permissions.length > 0 && <FlatList
+      {type && type[0] && type[0].value === 3 && !permissionLoading && permissions && permissions.length > 0 && <FlatList
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
         data={permissions}

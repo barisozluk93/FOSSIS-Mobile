@@ -49,7 +49,6 @@ export default function EPayment({ navigation }) {
   };
 
   const onChangType = (item) => {
-    console.log('item', item);
     setType(item);
   };
 

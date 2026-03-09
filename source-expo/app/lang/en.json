@@ -506,7 +506,11 @@
   "planning": "Planning",
   "draw_roof_message": "Please create the roof model for the building or press 'Cancel' button to cancel. (Double-click to finish the polygon.)",
   "finish_drawing": "Finish Drawing",
-  "roof_area": "Roof Area"
+  "roof_area": "Roof Area",
+  "numberOfSufficientPanel": "Number of Panels",
+  "systemPower": "Total System Power (kWh)",
+  "get_report": "Get Report",
+  "sure": "Are you sure to delete this record?"
 
 
 }

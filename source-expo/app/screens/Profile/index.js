@@ -17,8 +17,8 @@ const Profile = (props) => {
   const { navigation } = props;
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
-  const {user} = useSelector((state) => state.user);
-  
+  const { user } = useSelector((state) => state.user);
+
   /**
    * @description Simple logout with Redux
    * @author Passion UI <passionui.com>
@@ -27,7 +27,17 @@ const Profile = (props) => {
   const onLogOut = () => {
     setLoading(true);
     dispatch(logout());
-    dispatch({type: "USER_INIT"});
+    dispatch({ type: "AUTH_INIT" });
+    dispatch({ type: "USER_INIT" });
+    dispatch({ type: "ROLE_INIT" });
+    dispatch({ type: 'PERMISSION_INIT' });
+    dispatch({ type: 'PANEL_INIT' });
+    dispatch({ type: 'INVERTER_INIT' });
+    dispatch({ type: 'BATTERY_INIT' });
+    dispatch({ type: 'HEATPUMP_INIT' });
+    dispatch({ type: 'CONSTRUCTION_INIT' });
+    dispatch({ type: 'CABLE_INIT' });
+    dispatch({ type: 'CHARGINGSTATION_INIT' });
 
     setTimeout(() => {
       setLoading(false);
@@ -61,7 +71,7 @@ const Profile = (props) => {
                 textFirst={user.name + " " + user.surname}
                 textSecond={user.username}
                 textThird={user.email}
-                onPress={() => {}}
+                onPress={() => { }}
               />
             )}
             <View style={{ width: '100%' }}>

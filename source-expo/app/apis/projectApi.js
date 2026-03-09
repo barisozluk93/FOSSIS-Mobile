@@ -35,3 +35,41 @@ export const deleteRequest = async (id) => {
 
     return response.data;
 };
+
+export const getPvCalcRequest = async (params) => {
+  const filteredParams = {};
+
+  for (const key in params) {
+    if (
+      Object.prototype.hasOwnProperty.call(params, key) &&
+      params[key] !== undefined
+    ) {
+      filteredParams[key] = params[key];
+    }
+  }
+
+  const response = await api.get(`Project/Pvcalc`, {
+    params: filteredParams,
+  });
+
+  return response.data;
+};
+
+export const getSeriesCalcRequest = async (params) => {
+  const filteredParams = {};
+
+  for (const key in params) {
+    if (
+      Object.prototype.hasOwnProperty.call(params, key) &&
+      params[key] !== undefined
+    ) {
+      filteredParams[key] = params[key];
+    }
+  }
+
+  const response = await api.get(`Project/Seriescalc`, {
+    params: filteredParams,
+  });
+
+  return response.data;
+};

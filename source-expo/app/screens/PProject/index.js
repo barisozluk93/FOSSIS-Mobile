@@ -1,12 +1,14 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { FlatList, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, TouchableOpacity, View } from 'react-native';
 import { BaseColor, BaseStyle, useTheme } from '@/config';
-import { Header, Icon, Project01, SafeAreaView, Tag, Text, ModalOption, ProjectTicket } from '@/components';
+import { Header, Icon, Project01, SafeAreaView, Tag, Text, ModalOption, ProjectTicket, NotFound } from '@/components';
 import { StyleSheet } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { pagingProject } from '@/actions/project';
+import { deleteRequest } from '@/apis/projectApi';
+import Toast from 'react-native-toast-message';
 
 const PProject = (props) => {
   const { navigation } = props;
@@ -24,25 +26,72 @@ const PProject = (props) => {
   }
 
   useFocusEffect(
-      useCallback(() => {
-        fetchProjects();        
-        return () => {
-          dispatch({ type: 'PROJECT_INIT' });
-        };
-      }, [currentPage, searchTerm])
-    );
+    useCallback(() => {
+      fetchProjects();
+      return () => {
+        dispatch({ type: 'PROJECT_INIT' });
+      };
+    }, [currentPage, searchTerm])
+  );
 
   const onFilter = () => {
     navigation.navigate('ProjectFilter');
   };
 
+  const confirmDeleteProject = (item) => {
+    Alert.alert(
+      "",
+      t('sure'),
+      [
+        { text: t('cancel'), style: 'cancel' },
+        {
+          text: t('ok'),
+          onPress: () => deleteProject(item),
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const deleteProject = (item) => {
+    deleteRequest(item.id).then(result => {
+      if (result.isSuccess) {
+        Toast.show({
+          type: 'success',
+          text1: t('success'),
+          text2: t('success_message'),
+        });
+        
+        setTimeout(() => {
+          fetchProjects();
+        }, 250);
+      }
+      else {
+        Toast.show({
+          type: 'error',
+          text1: t('error'),
+          text2: result?.message || t('pw_didnt_match_message'),
+        });
+      }
+    }).catch(error => {
+      Toast.show({
+        type: 'error',
+        text1: t('error'),
+        text2: result?.message || t('pw_didnt_match_message'),
+      });
+    })
+  }
+
   const onItemSelected = (item) => {
     setShowAction(false);
-    if(item.value === 1) {
+    if (item.value === 1) {
       navigation.navigate('PProjectCreate', { item: selectedItem });
     }
-    else{
-
+    else if (item.value === 2){
+      confirmDeleteProject(selectedItem);
+    }
+    else {
+      navigation.navigate('PProjectReport', { item: selectedItem });
     }
   }
 
@@ -91,6 +140,7 @@ const PProject = (props) => {
             {t("filter")}
           </Tag>
         </View>
+
         {projects && projects.length > 0 && !loading && <View
           style={{
             position: "absolute",
@@ -124,6 +174,11 @@ const PProject = (props) => {
           </TouchableOpacity>
         </View>}
       </View>
+
+      {(loading) && <ActivityIndicator color={colors.primary} size={"large"} style={{ flex: 1 }}></ActivityIndicator>}
+        
+      {!loading && projects && projects.length === 0 && <NotFound />}
+
       <FlatList
         contentContainerStyle={{ backgroundColor: colors.card }}
         showsHorizontalScrollIndicator={false}
@@ -140,7 +195,8 @@ const PProject = (props) => {
             roofArea={item.roofArea}
             margin={item.margin}
             gridSpace={item.gridSpace}
-            onOption={(item) => { setSelectedIdtem(projects.filter(f => f.id == item)[0]); setShowAction(true);}}
+            isDeleted={item.isDeleted}
+            onOption={(item) => { setSelectedIdtem(projects.filter(f => f.id == item)[0]); setShowAction(true); }}
             style={{
               paddingBottom: 20,
               marginBottom: 15,
@@ -150,9 +206,13 @@ const PProject = (props) => {
       />
       <ModalOption
         value={{}}
-        options={[
-          {value: 1, text: t('edit')},
-          {value: 2, text: t('delete')}
+        options={selectedItem?.systemPower ? [
+          { value: 1, text: t('edit') },
+          { value: 2, text: t('delete') },
+          { value: 3, text: t('get_report')}
+        ] : [
+          { value: 1, text: t('edit') },
+          { value: 2, text: t('delete') },
         ]}
         isVisible={showAction}
         onSwipeComplete={() => {

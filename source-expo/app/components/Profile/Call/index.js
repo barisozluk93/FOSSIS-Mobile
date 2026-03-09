@@ -22,7 +22,6 @@ export default function ProfileCall({
   onPressRight,
 }) {
   const { colors } = useTheme();
-  // console.log(parseHexTransparency(colors.primary, 30));
 
   return (
     <TouchableOpacity style={[styles.contain, style]} onPress={onPress} activeOpacity={0.9}>

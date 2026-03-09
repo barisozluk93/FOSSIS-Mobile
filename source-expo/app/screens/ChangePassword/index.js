@@ -58,8 +58,18 @@ const ChangePassword = (props) => {
 
           if (response.isSuccess) {
             await removeToken();
-            dispatch({ type: 'AUTH_LOGOUT' });
-            dispatch({ type: 'USER_INIT' });
+            dispatch({ type: "AUTH_LOGOUT" });
+            dispatch({ type: "AUTH_INIT" });
+            dispatch({ type: "USER_INIT" });
+            dispatch({ type: "ROLE_INIT" });
+            dispatch({ type: 'PERMISSION_INIT' });
+            dispatch({ type: 'PANEL_INIT' });
+            dispatch({ type: 'INVERTER_INIT' });
+            dispatch({ type: 'BATTERY_INIT' });
+            dispatch({ type: 'HEATPUMP_INIT' });
+            dispatch({ type: 'CONSTRUCTION_INIT' });
+            dispatch({ type: 'CABLE_INIT' });
+            dispatch({ type: 'CHARGINGSTATION_INIT' });
 
             Toast.show({
               type: 'success',

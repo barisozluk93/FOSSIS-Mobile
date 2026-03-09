@@ -21,6 +21,8 @@ const MaterialTicket = ({
   nominalCapacity,
   cop,
   power,
+  width,
+  height,
   status = '',
 }) => {
   const { t } = useTranslation();
@@ -103,6 +105,8 @@ const MaterialTicket = ({
             {renderField('structuretype', 'list', structureType)}
             {renderField('technology', 'microchip', technology)}
             {renderField('panelorientation', 'compass', panelOrientation)}
+            {renderField('width', 'arrows-alt-h', width, ' cm')}
+            {renderField('height', 'arrows-alt-v', height,  ' cm')}
           </View>
 
         </View>

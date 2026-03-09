@@ -15,6 +15,7 @@ import UserFilter from '@/screens/UserFilter';
 import PMaterial from '@/screens/PMaterial';
 import MaterialFilter from '@/screens/MaterialFilter';
 import ProjectFilter from '@/screens/ProjectFilter';
+import PProjectReport from '@/screens/PProjectReport';
 
 export const NewsTabScreens = {
   User: {
@@ -72,6 +73,12 @@ export default {
     component: PProjectCreate,
     options: {
       title: 'create_project',
+    },
+  },
+  PProjectReport: {
+    component: PProjectReport,
+    options: {
+      title: 'get_report',
     },
   },
   PTaskCreate: {

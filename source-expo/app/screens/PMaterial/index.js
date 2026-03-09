@@ -145,7 +145,7 @@ const PMaterial = () => {
   };
 
   const onChangeType = (typeInline) => {
-    setType(typeInline);
+    setType([typeInline]);
     setCurrentPage(1);
   };
 
@@ -223,7 +223,7 @@ const PMaterial = () => {
             {t("filter")}
           </Tag>
         </View>
-        {type && type[0].value === 1 && panels && panels.length > 0 && !panelLoading && <View
+        {type && type[0] && type[0].value === 1 && panels && panels.length > 0 && !panelLoading && <View
           style={{
             position: "absolute",
             left: 0,
@@ -256,7 +256,7 @@ const PMaterial = () => {
           </TouchableOpacity>
         </View>}
 
-        {type && type[0].value === 2 && inverters && inverters.length > 0 && !inverterLoading && <View
+        {type && type[0] && type[0].value === 2 && inverters && inverters.length > 0 && !inverterLoading && <View
           style={{
             position: "absolute",
             left: 0,
@@ -289,7 +289,7 @@ const PMaterial = () => {
           </TouchableOpacity>
         </View>}
 
-        {type && type[0].value === 3 && batteries && batteries.length > 0 && !batteryLoading && <View
+        {type && type[0] && type[0].value === 3 && batteries && batteries.length > 0 && !batteryLoading && <View
           style={{
             position: "absolute",
             left: 0,
@@ -322,7 +322,7 @@ const PMaterial = () => {
           </TouchableOpacity>
         </View>}
 
-        {type && type[0].value === 4 && heatpumps && heatpumps.length > 0 && !heatpumpLoading && <View
+        {type && type[0] && type[0].value === 4 && heatpumps && heatpumps.length > 0 && !heatpumpLoading && <View
           style={{
             position: "absolute",
             left: 0,
@@ -355,7 +355,7 @@ const PMaterial = () => {
           </TouchableOpacity>
         </View>}
 
-        {type && type[0].value === 5 && constructions && constructions.length > 0 && !constructionLoading && <View
+        {type && type[0] && type[0].value === 5 && constructions && constructions.length > 0 && !constructionLoading && <View
           style={{
             position: "absolute",
             left: 0,
@@ -388,7 +388,7 @@ const PMaterial = () => {
           </TouchableOpacity>
         </View>}
 
-        {type && type[0].value === 6 && cables && cables.length > 0 && !cableLoading && <View
+        {type && type[0] && type[0].value === 6 && cables && cables.length > 0 && !cableLoading && <View
           style={{
             position: "absolute",
             left: 0,
@@ -421,7 +421,7 @@ const PMaterial = () => {
           </TouchableOpacity>
         </View>}
 
-        {type && type[0].value === 7 && chargingstations && chargingstations.length > 0 && !chargingstationLoading && <View
+        {type && type[0] && type[0].value === 7 && chargingstations && chargingstations.length > 0 && !chargingstationLoading && <View
           style={{
             position: "absolute",
             left: 0,
@@ -457,9 +457,9 @@ const PMaterial = () => {
 
       {(panelLoading || inverterLoading || batteryLoading || heatpumpLoading || cableLoading || chargingstationLoading || constructionLoading) && <ActivityIndicator color={colors.primary} size={"large"} style={{ flex: 1 }}></ActivityIndicator>}
 
-      {type && (type[0].value === 1 && !panelLoading && panels && panels.length === 0) && <NotFound />}
+      {type && type[0] && (type[0].value === 1 && !panelLoading && panels && panels.length === 0) && <NotFound />}
 
-      {type && type[0].value === 1 && !panelLoading && panels && panels.length > 0 &&
+      {type && type[0] && type[0].value === 1 && !panelLoading && panels && panels.length > 0 &&
         <FlatList
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
@@ -472,6 +472,8 @@ const PMaterial = () => {
               status={!item.isDeleted ? "active" : "passive"}
               type={item.type}
               maximumDCPower={item.maximumDCPower}
+              width={item.width}
+              height={item.length}
               style={{
                 marginVertical: 10,
               }}
@@ -479,9 +481,9 @@ const PMaterial = () => {
           )}
         />}
 
-      {type && (type[0].value === 2 && !inverterLoading && inverters && inverters.length === 0) && <NotFound />}
+      {type && type[0] && (type[0].value === 2 && !inverterLoading && inverters && inverters.length === 0) && <NotFound />}
 
-      {type && type[0].value === 2 && !inverterLoading && inverters && inverters.length > 0 &&
+      {type && type[0] && type[0].value === 2 && !inverterLoading && inverters && inverters.length > 0 &&
         <FlatList
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
@@ -501,9 +503,9 @@ const PMaterial = () => {
           )}
         />}
 
-      {type && (type[0].value === 3 && !batteryLoading && batteries && batteries.length === 0) && <NotFound />}
+      {type && type[0] && (type[0].value === 3 && !batteryLoading && batteries && batteries.length === 0) && <NotFound />}
 
-      {type && type[0].value === 3 && !batteryLoading && batteries && batteries.length > 0 &&
+      {type && type[0] && type[0].value === 3 && !batteryLoading && batteries && batteries.length > 0 &&
         <FlatList
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
@@ -524,9 +526,9 @@ const PMaterial = () => {
           )}
         />}
 
-      {type && (type[0].value === 4 && !heatpumpLoading && heatpumps && heatpumps.length === 0) && <NotFound />}
+      {type && type[0] && (type[0].value === 4 && !heatpumpLoading && heatpumps && heatpumps.length === 0) && <NotFound />}
 
-      {type && type[0].value === 4 && !heatpumpLoading && heatpumps && heatpumps.length > 0 &&
+      {type && type[0] && type[0].value === 4 && !heatpumpLoading && heatpumps && heatpumps.length > 0 &&
         <FlatList
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
@@ -548,9 +550,9 @@ const PMaterial = () => {
           )}
         />}
 
-      {type && (type[0].value === 5 && !constructionLoading && constructions && constructions.length === 0) && <NotFound />}
+      {type && type[0] && (type[0].value === 5 && !constructionLoading && constructions && constructions.length === 0) && <NotFound />}
 
-      {type && type[0].value === 5 && !constructionLoading && constructions && constructions.length > 0 &&
+      {type && type[0] && type[0].value === 5 && !constructionLoading && constructions && constructions.length > 0 &&
         <FlatList
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
@@ -570,9 +572,9 @@ const PMaterial = () => {
           )}
         />}
 
-      {type && (type[0].value === 6 && !cableLoading && cables && cables.length === 0) && <NotFound />}
+      {type && type[0] && (type[0].value === 6 && !cableLoading && cables && cables.length === 0) && <NotFound />}
 
-      {type && type[0].value === 6 && !cableLoading && cables && cables.length > 0 &&
+      {type && type[0] && type[0].value === 6 && !cableLoading && cables && cables.length > 0 &&
         <FlatList
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
@@ -591,9 +593,9 @@ const PMaterial = () => {
           )}
         />}
 
-      {type && (type[0].value === 7 && !chargingstationLoading && chargingstations && chargingstations.length === 0) && <NotFound />}
+      {type && type[0] && (type[0].value === 7 && !chargingstationLoading && chargingstations && chargingstations.length === 0) && <NotFound />}
 
-      {type && type[0].value === 7 && !chargingstationLoading && chargingstations && chargingstations.length > 0 &&
+      {type && type[0] && type[0].value === 7 && !chargingstationLoading && chargingstations && chargingstations.length > 0 &&
         <FlatList
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}

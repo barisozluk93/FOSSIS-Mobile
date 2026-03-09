@@ -4,9 +4,9 @@
     "slug": "FOSSIS",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logo.png",
+    "icon": "./assets/favicon.png",
     "splash": {
-      "image": "./assets/logo.png",
+      "image": "./assets/favicon.png",
       "resizeMode": "contain",
       "backgroundColor": "#FFFFFF"
     },
@@ -17,7 +17,7 @@
       "**/*"
     ],
     "ios": {
-      "icon": "./assets/logo.png",
+      "icon": "./assets/favicon.png",
       "supportsTablet": true,
       "bundleIdentifier": "com.klcsoft.fossis",
       "infoPlist": {
@@ -26,7 +26,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logo.png",
+        "foregroundImage": "./assets/favicon.png",
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.klcsoft.fossis"
@@ -36,7 +36,7 @@
     },
     "plugins": [
       "expo-font",
-       [
+      [
         "@rnmapbox/maps",
         {
           "RNMapboxMapsVersion": "11.19.0"
@@ -44,6 +44,11 @@
       ]
     ],
     "newArchEnabled": true,
-    "owner": "barisozluk"
+    "owner": "barisozluk",
+    "extra": {
+      "eas": {
+        "projectId": "9a7f3952-144e-426a-a659-ca8f9a96fdb0"
+      }
+    }
   }
 }

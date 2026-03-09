@@ -25,7 +25,7 @@ const PickerSelect = ({ style = undefined, label = '', options = [], value = {},
         style={{
           borderWidth: StyleSheet.hairlineWidth,
           borderRadius: 5,
-          borderColor: style ? style.border : colors.border,
+          borderColor: style ? style.borderColor : colors.border,
           padding: 10,
           flexDirection: 'row',
           alignItems: 'center',

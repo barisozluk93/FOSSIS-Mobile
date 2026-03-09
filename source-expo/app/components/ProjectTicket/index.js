@@ -19,6 +19,7 @@ const ProjectTicket = ({
   gridSpace,
   status,
   panel,
+  isDeleted,
   onOption,
 }) => {
   const { t } = useTranslation();
@@ -81,7 +82,7 @@ const ProjectTicket = ({
             </Tag>
           </View>
 
-          <View style={styles.optionWrapper}>
+          {!isDeleted && <View style={styles.optionWrapper}>
             <TouchableOpacity
               hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
               style={styles.optionButton}
@@ -89,7 +90,7 @@ const ProjectTicket = ({
             >
               <Icon name="ellipsis-h" size={14} color={colors.text} />
             </TouchableOpacity>
-          </View>
+          </View>}
         </View>
 
         {/* CONTENT */}

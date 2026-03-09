@@ -10,7 +10,7 @@ import * as rootNavigation from '../navigation/rootNavigation';
 
 
 const api = axios.create({
-  baseURL: 'http://192.168.1.116:5055/api',
+  baseURL: 'https://styever.com/api2',
   timeout: 15000,
 });
 
@@ -73,9 +73,10 @@ api.interceptors.response.use(
 
         // Refresh isteği
         const authResponse = await refreshTokenRequest(accessToken, refreshToken);
-        await saveToken(authResponse);
-        api.defaults.headers.Authorization = "Bearer " + authResponse.accessToken;
-        processQueue(null, authResponse.accessToken);
+        await saveToken(authResponse.data);
+
+        api.defaults.headers.Authorization = "Bearer " + authResponse.data.accessToken;
+        processQueue(null, authResponse.data.accessToken);
         return api(originalRequest);
       } catch (err) {
         processQueue(err, null);

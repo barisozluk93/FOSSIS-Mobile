@@ -2,10 +2,7 @@ import React, { useState, useRef, useCallback, useMemo, useEffect } from "react"
 import { useNavigation, useRoute } from "@react-navigation/core";
 import { useTranslation } from "react-i18next";
 import { View, Text, TouchableOpacity } from "react-native";
-import {
-  ModalProject,
-  SafeAreaView,
-} from "@/components";
+import { ModalProject, SafeAreaView } from "@/components";
 import { BaseColor, BaseStyle, useTheme } from "@/config";
 import Mapbox from "@rnmapbox/maps";
 import styles from "./styles";
@@ -20,6 +17,7 @@ const INITIAL_CENTER = [28.9741, 41.0256];
 const INITIAL_ZOOM = 17;
 const INITIAL_PITCH = 75;
 const INITIAL_BEARING = 130;
+const SELECTED_BUILDING_ZOOM = 18;
 
 const EMPTY_STYLE = {
   version: 8,
@@ -37,10 +35,11 @@ const PProjectCreate = () => {
   const cameraRef = useRef(null);
   const initialCameraApplied = useRef(false);
   const selectedFeatureIdRef = useRef(null);
+  const buildingSelectionSnapshotRef = useRef(null);
 
   const selectedBuildingCameraRef = useRef({
     centerCoordinate: INITIAL_CENTER,
-    zoomLevel: 19,
+    zoomLevel: SELECTED_BUILDING_ZOOM,
     pitch: INITIAL_PITCH,
     bearing: INITIAL_BEARING,
   });
@@ -163,7 +162,6 @@ const PProjectCreate = () => {
       const normalized = normalizeBuildingsGeoJson(geojson);
       setBuildingsGeoJson(normalized);
     } catch (err) {
-      console.log("getBuildings error:", err);
     }
   }, [normalizeBuildingsGeoJson]);
 
@@ -182,7 +180,6 @@ const PProjectCreate = () => {
       setLng(newLng);
       setLat(newLat);
     } catch (e) {
-      console.log("onMapIdle error:", e);
     }
   }, []);
 
@@ -284,7 +281,7 @@ const PProjectCreate = () => {
 
       cameraRef.current?.setCamera({
         centerCoordinate: featureCenter,
-        zoomLevel: 19,
+        zoomLevel: SELECTED_BUILDING_ZOOM,
         pitch: 0,
         bearing: 0,
         animationDuration,
@@ -307,7 +304,8 @@ const PProjectCreate = () => {
 
       cameraRef.current?.setCamera({
         centerCoordinate: featureCenter,
-        zoomLevel: selectedBuildingCameraRef.current?.zoomLevel ?? 19,
+        zoomLevel:
+          selectedBuildingCameraRef.current?.zoomLevel ?? SELECTED_BUILDING_ZOOM,
         pitch: selectedBuildingCameraRef.current?.pitch ?? INITIAL_PITCH,
         bearing: selectedBuildingCameraRef.current?.bearing ?? INITIAL_BEARING,
         animationDuration,
@@ -327,7 +325,6 @@ const PProjectCreate = () => {
         "buildings"
       );
     } catch (e) {
-      console.log("removeFeatureState error:", e);
     } finally {
       selectedFeatureIdRef.current = null;
     }
@@ -347,6 +344,8 @@ const PProjectCreate = () => {
       const featureCenter = getFeatureCenterFromBounds(bounds);
       const nextLocation = `${featureCenter[1].toFixed(6)}, ${featureCenter[0].toFixed(6)}`;
 
+      const previousBuildingId = item?.buildingId;
+
       await clearSelectedBuildingState();
 
       try {
@@ -357,23 +356,30 @@ const PProjectCreate = () => {
         );
         selectedFeatureIdRef.current = feature.id;
       } catch (e) {
-        console.log("setFeatureState error:", e);
       }
 
       setSelectedBuildingFeature(feature);
 
       selectedBuildingCameraRef.current = {
         centerCoordinate: featureCenter,
-        zoomLevel: options.zoomLevel ?? 19,
+        zoomLevel: options.zoomLevel ?? SELECTED_BUILDING_ZOOM,
         pitch: options.pitch ?? INITIAL_PITCH,
         bearing: options.bearing ?? INITIAL_BEARING,
       };
 
-      setItem((prev) => ({
-        ...(prev || {}),
-        buildingId: feature.id,
-        location: prev?.location || nextLocation,
-      }));
+      setItem((prev) => {
+        const isBuildingChanged =
+          String(previousBuildingId || "") !== String(feature.id || "");
+
+        return {
+          ...(prev || {}),
+          buildingId: feature.id,
+          location: nextLocation,
+          roofWkt: isBuildingChanged ? undefined : prev?.roofWkt,
+          roofGeom: isBuildingChanged ? undefined : prev?.roofGeom,
+          roofArea: isBuildingChanged ? undefined : prev?.roofArea,
+        };
+      });
 
       setCenter(featureCenter);
       setLng(featureCenter[0]);
@@ -381,21 +387,29 @@ const PProjectCreate = () => {
 
       cameraRef.current?.setCamera({
         centerCoordinate: featureCenter,
-        zoomLevel: options.zoomLevel ?? 19,
+        zoomLevel: options.zoomLevel ?? SELECTED_BUILDING_ZOOM,
         pitch: options.pitch ?? INITIAL_PITCH,
         bearing: options.bearing ?? INITIAL_BEARING,
         animationDuration: options.animationDuration ?? 1200,
         animationMode: "flyTo",
       });
 
+      setRoofPoints([]);
+      setRoofResult({
+        wkt: "",
+        area: 0,
+      });
+      setIsDrawingRoof(false);
       setIsSelectingBuilding(false);
       setShowAction(true);
+      buildingSelectionSnapshotRef.current = null;
     },
     [
       buildingsGeoJson,
       clearSelectedBuildingState,
       getFeatureBounds,
       getFeatureCenterFromBounds,
+      item?.buildingId,
     ]
   );
 
@@ -406,7 +420,7 @@ const PProjectCreate = () => {
     if (selectedBuildingFeature) return;
 
     focusBuildingById(item.buildingId, {
-      zoomLevel: 19,
+      zoomLevel: SELECTED_BUILDING_ZOOM,
       pitch: INITIAL_PITCH,
       bearing: INITIAL_BEARING,
       animationDuration: 0,
@@ -436,6 +450,7 @@ const PProjectCreate = () => {
       buildingId: undefined,
       location: "",
       roofWkt: undefined,
+      roofGeom: undefined,
       roofArea: undefined,
     }));
 
@@ -444,25 +459,91 @@ const PProjectCreate = () => {
 
   const selectBuilding = useCallback(
     async (projectFromModal) => {
-      setItem(projectFromModal || {});
-      await resetMapToInitialState();
+      buildingSelectionSnapshotRef.current = {
+        item: projectFromModal || item || {},
+        selectedBuildingFeature,
+        selectedFeatureId: selectedFeatureIdRef.current,
+        selectedBuildingCamera: selectedBuildingCameraRef.current,
+      };
+
+      setItem(projectFromModal || item || {});
+      setRoofPoints([]);
+      setRoofResult({
+        wkt: "",
+        area: 0,
+      });
+      setIsDrawingRoof(false);
       setShowAction(false);
       setIsSelectingBuilding(true);
+
+      if (selectedBuildingFeature) {
+        focusSelectedBuildingAngled(selectedBuildingFeature, 400);
+      }
     },
-    [resetMapToInitialState]
+    [item, selectedBuildingFeature, focusSelectedBuildingAngled]
   );
 
   const cancelBuildingSelection = useCallback(async () => {
-    await resetMapToInitialState();
+    const snapshot = buildingSelectionSnapshotRef.current;
+
+    setRoofPoints([]);
+    setRoofResult({
+      wkt: "",
+      area: 0,
+    });
+    setIsDrawingRoof(false);
     setIsSelectingBuilding(false);
     setShowAction(true);
-  }, [resetMapToInitialState]);
+
+    if (!snapshot) {
+      return;
+    }
+
+    setItem(snapshot.item || {});
+    selectedBuildingCameraRef.current =
+      snapshot.selectedBuildingCamera || {
+        centerCoordinate: INITIAL_CENTER,
+        zoomLevel: SELECTED_BUILDING_ZOOM,
+        pitch: INITIAL_PITCH,
+        bearing: INITIAL_BEARING,
+      };
+
+    await clearSelectedBuildingState();
+
+    const previousBuildingFeature = snapshot.selectedBuildingFeature;
+
+    if (previousBuildingFeature) {
+      try {
+        await mapRef.current?.setFeatureState(
+          previousBuildingFeature.id,
+          { selected: true },
+          "buildings"
+        );
+        selectedFeatureIdRef.current = previousBuildingFeature.id;
+      } catch (e) {
+      }
+
+      setSelectedBuildingFeature(previousBuildingFeature);
+      focusSelectedBuildingAngled(previousBuildingFeature, 600);
+    } else {
+      setSelectedBuildingFeature(null);
+      selectedFeatureIdRef.current = null;
+      flyToInitial(800);
+    }
+
+    buildingSelectionSnapshotRef.current = null;
+  }, [clearSelectedBuildingState, focusSelectedBuildingAngled, flyToInitial]);
 
   const finishRoofDrawing = useCallback(() => {
     if (roofPoints.length < 3) return;
 
     const calculatedArea = calculatePolygonAreaMeters(roofPoints);
     const wkt = polygonToWkt(roofPoints);
+
+    const roofGeom = {
+      type: "Polygon",
+      coordinates: [[...roofPoints, roofPoints[0]]],
+    };
 
     setRoofResult({
       wkt,
@@ -472,6 +553,7 @@ const PProjectCreate = () => {
     setItem((prev) => ({
       ...(prev || {}),
       roofWkt: wkt,
+      roofGeom,
       roofArea: calculatedArea,
     }));
 
@@ -545,7 +627,7 @@ const PProjectCreate = () => {
       if (!feature || feature.id == null) return;
 
       await focusBuildingById(feature.id, {
-        zoomLevel: 19,
+        zoomLevel: SELECTED_BUILDING_ZOOM,
         pitch: INITIAL_PITCH,
         bearing: INITIAL_BEARING,
         animationDuration: 1200,
@@ -592,6 +674,10 @@ const PProjectCreate = () => {
   }, [roofPoints]);
 
   const visibleBuildingsGeoJson = useMemo(() => {
+    if (isSelectingBuilding) {
+      return buildingsGeoJson;
+    }
+
     if (selectedBuildingFeature) {
       return {
         type: "FeatureCollection",
@@ -600,7 +686,7 @@ const PProjectCreate = () => {
     }
 
     return buildingsGeoJson;
-  }, [buildingsGeoJson, selectedBuildingFeature]);
+  }, [buildingsGeoJson, selectedBuildingFeature, isSelectingBuilding]);
 
   const getProjectById = useCallback((id) => {
     getByIdRequest(id)
@@ -650,9 +736,7 @@ const PProjectCreate = () => {
 
           <Mapbox.RasterSource
             id="osmSource"
-            tileUrlTemplates={[
-              "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-            ]}
+            tileUrlTemplates={["https://tile.openstreetmap.org/{z}/{x}/{y}.png"]}
             tileSize={256}
             maxZoomLevel={19}
           >
@@ -672,7 +756,7 @@ const PProjectCreate = () => {
             </Mapbox.ShapeSource>
           )}
 
-          {roofLineGeoJson && (
+          {isDrawingRoof && roofLineGeoJson && (
             <Mapbox.ShapeSource id="roof-line-source" shape={roofLineGeoJson}>
               <Mapbox.LineLayer
                 id="roof-line-layer"
@@ -684,7 +768,7 @@ const PProjectCreate = () => {
             </Mapbox.ShapeSource>
           )}
 
-          {roofPolygonGeoJson && (
+          {isDrawingRoof && roofPolygonGeoJson && (
             <Mapbox.ShapeSource id="roof-drawing-source" shape={roofPolygonGeoJson}>
               <Mapbox.FillLayer
                 id="roof-drawing-fill"
@@ -711,7 +795,7 @@ const PProjectCreate = () => {
               top: 16,
               left: 16,
               right: 16,
-              backgroundColor: colors.primaryLight,
+              backgroundColor: colors.background,
               borderRadius: 12,
               borderWidth: 1,
               borderColor: colors.border,
@@ -735,13 +819,13 @@ const PProjectCreate = () => {
             <TouchableOpacity
               onPress={cancelBuildingSelection}
               style={{
-                backgroundColor: BaseColor.whiteColor,
+                backgroundColor: colors.primaryLight,
                 paddingHorizontal: 12,
                 paddingVertical: 8,
                 borderRadius: 8,
               }}
             >
-              <Text style={{ color: colors.text }}>{t("cancel")}</Text>
+              <Text style={{ color: colors.background }}>{t("cancel")}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -753,7 +837,7 @@ const PProjectCreate = () => {
               top: 16,
               left: 16,
               right: 16,
-              backgroundColor: colors.primaryLight,
+              backgroundColor: colors.background,
               borderRadius: 12,
               borderWidth: 1,
               borderColor: colors.border,
@@ -780,28 +864,29 @@ const PProjectCreate = () => {
               <TouchableOpacity
                 onPress={cancelRoofDrawing}
                 style={{
-                  backgroundColor: colors.card,
+                  backgroundColor: colors.primaryLight,
                   paddingHorizontal: 12,
                   paddingVertical: 8,
                   borderRadius: 8,
                   marginRight: 8,
                 }}
               >
-                <Text style={{ color: colors.text }}>{t("cancel")}</Text>
+                <Text style={{ color: colors.background }}>{t("cancel")}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={finishRoofDrawing}
                 disabled={roofPoints.length < 3}
                 style={{
-                  backgroundColor: roofPoints.length < 3 ? colors.border : colors.primary,
+                  backgroundColor:
+                    roofPoints.length < 3 ? colors.border : colors.primaryDark,
                   paddingHorizontal: 12,
                   paddingVertical: 8,
                   borderRadius: 8,
                 }}
               >
                 <Text style={{ color: BaseColor.whiteColor }}>
-                  {t('finish_drawing')}
+                  {t("finish_drawing")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -826,7 +911,7 @@ const PProjectCreate = () => {
           </View>
         )}
 
-        <View style={[styles.infoBar, { backgroundColor: colors.primaryLight }]}>
+        <View style={[styles.infoBar, { backgroundColor: colors.background }]}>
           <Text style={[styles.infoText, { color: colors.text }]}>
             {t("zoom")} : {zoom.toFixed(2)}
           </Text>
