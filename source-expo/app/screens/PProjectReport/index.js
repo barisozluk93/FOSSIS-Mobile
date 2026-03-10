@@ -173,7 +173,7 @@ const PProjectReport = () => {
         const params = {
           lat: Number(lat),
           lon: Number(lon),
-          startyear: 2020,
+          startyear: 2010,
           endyear: 2020,
           pvcalculation: 1,
           peakpower: Number(systemPower),
@@ -184,7 +184,6 @@ const PProjectReport = () => {
         };
 
         const result = await getSeriesCalcRequest(params);
-
         if (result?.isSuccess) {
           setDailyData(Array.isArray(result.data) ? result.data : []);
         } else {
@@ -554,6 +553,7 @@ const PProjectReport = () => {
           );
         }}
         onPressLeft={() => {
+          navigation.setParams({ item: item });
           navigation.goBack();
         }}
       />

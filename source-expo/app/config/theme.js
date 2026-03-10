@@ -177,33 +177,33 @@ export const ThemeSupport = [
  */
 export const DefaultTheme = {
 
-  theme: 'green',
-  light: {
-    dark: false,
-    colors: {
-      primary: '#58D68D',
-      primaryDark: '#388E3C',
-      primaryLight: '#C8E6C9',
-      accent: '#607D8B',
-      background: 'white',
-      card: '#F5F5F5',
-      text: '#212121',
-      border: '#c7c7cc',
+  theme: 'yellow',
+    light: {
+      dark: false,
+      colors: {
+        primary: '#FDC60A',
+        primaryDark: '#FFA000',
+        primaryLight: '#FFECB3',
+        accent: '#795548',
+        background: 'white',
+        card: '#F5F5F5',
+        text: '#212121',
+        border: '#c7c7cc',
+      },
     },
-  },
-  dark: {
-    dark: true,
-    colors: {
-      primary: '#58D68D',
-      primaryDark: '#388E3C',
-      primaryLight: '#C8E6C9',
-      accent: '#607D8B',
-      background: '#010101',
-      card: '#121212',
-      text: '#e5e5e7',
-      border: '#272729',
+    dark: {
+      dark: true,
+      colors: {
+        primary: '#FDC60A',
+        primaryDark: '#FFA000',
+        primaryLight: '#FFECB3',
+        accent: '#795548',
+        background: '#010101',
+        card: '#121212',
+        text: '#e5e5e7',
+        border: '#272729',
+      },
     },
-  },
 };
 
 /**

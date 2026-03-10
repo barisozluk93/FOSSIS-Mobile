@@ -9,9 +9,9 @@ const Loading = () => {
     <View style={styles.container}>
       <View style={{ alignItems: 'center' }}>
         <Image source={Images.logo} style={styles.logo} resizeMode="contain" />
-        <Text title1 style={{ marginTop: 10 }}>
-          FOSSIS
-        </Text>
+        {/* <Text title1 style={{ marginTop: 10 }}>
+          FOSSIS 3
+        </Text> */}
       </View>
       <ActivityIndicator
         size="large"

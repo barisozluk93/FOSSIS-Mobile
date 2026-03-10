@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "FOSSIS",
-    "slug": "FOSSIS",
+    "name": "FOSSIS 3",
+    "slug": "FOSSIS3D",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/favicon.png",
@@ -19,9 +19,10 @@
     "ios": {
       "icon": "./assets/favicon.png",
       "supportsTablet": true,
-      "bundleIdentifier": "com.klcsoft.fossis",
+      "bundleIdentifier": "com.klcsoft.fossis3d",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "Harita modülü fonksiyonlarını yerine getirebilmek için konumunuzu kullanabilir."
       }
     },
     "android": {
@@ -29,7 +30,7 @@
         "foregroundImage": "./assets/favicon.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.klcsoft.fossis"
+      "package": "com.klcsoft.fossis3d"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -47,7 +48,7 @@
     "owner": "barisozluk",
     "extra": {
       "eas": {
-        "projectId": "9a7f3952-144e-426a-a659-ca8f9a96fdb0"
+        "projectId": "8c85963b-a950-48ec-93a1-957a0114aa75"
       }
     }
   }

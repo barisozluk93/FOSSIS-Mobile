@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { useNavigation, useRoute } from "@react-navigation/core";
+import { useFocusEffect } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { View, Text, TouchableOpacity } from "react-native";
 import { ModalProject, SafeAreaView } from "@/components";
@@ -34,7 +35,6 @@ const PProjectCreate = () => {
   const mapRef = useRef(null);
   const cameraRef = useRef(null);
   const initialCameraApplied = useRef(false);
-  const selectedFeatureIdRef = useRef(null);
   const buildingSelectionSnapshotRef = useRef(null);
 
   const selectedBuildingCameraRef = useRef({
@@ -44,7 +44,8 @@ const PProjectCreate = () => {
     bearing: INITIAL_BEARING,
   });
 
-  const [showAction, setShowAction] = useState(!(route?.params?.item?.id > 0));
+  const [showAction, setShowAction] = useState(true);
+  const [modalRenderKey, setModalRenderKey] = useState(0);
   const [isSelectingBuilding, setIsSelectingBuilding] = useState(false);
   const [isDrawingRoof, setIsDrawingRoof] = useState(false);
 
@@ -64,11 +65,36 @@ const PProjectCreate = () => {
   });
   const [roofCancelResetKey, setRoofCancelResetKey] = useState(0);
 
+  const openModal = useCallback(() => {
+    setShowAction(true);
+    setModalRenderKey((prev) => prev + 1);
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setShowAction(false);
+  }, []);
+
   useEffect(() => {
     if (route?.params?.item) {
       setItem(route.params.item);
+      openModal();
+      getProjectById(route.params.item.id);
     }
-  }, [route?.params?.item]);
+  }, [route?.params?.item, openModal]);
+
+  useEffect(() => {
+    if (item?.id) {
+      openModal();
+    }
+  }, [item?.id, openModal]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (route?.params?.item?.id) {
+        openModal();
+      }
+    }, [route?.params?.item?.id, openModal])
+  );
 
   const applyInitialCamera = useCallback(() => {
     if (initialCameraApplied.current || !cameraRef.current) return;
@@ -110,7 +136,7 @@ const PProjectCreate = () => {
     () => ({
       fillExtrusionColor: [
         "case",
-        ["boolean", ["feature-state", "selected"], false],
+        ["boolean", ["get", "selected"], false],
         colors.primary,
         colors.primaryLight,
       ],
@@ -140,7 +166,7 @@ const PProjectCreate = () => {
             ? parseInt(rawHeight, 10)
             : 0;
 
-        const generatedId = String(index + 1);
+        const generatedId = index + 1;
 
         return {
           ...feature,
@@ -149,6 +175,7 @@ const PProjectCreate = () => {
             ...feature.properties,
             originalFeatureId: feature.id,
             height: Number.isNaN(parsedHeight) ? 0 : parsedHeight,
+            selected: false,
           },
         };
       }),
@@ -162,6 +189,7 @@ const PProjectCreate = () => {
       const normalized = normalizeBuildingsGeoJson(geojson);
       setBuildingsGeoJson(normalized);
     } catch (err) {
+      console.log("getBuildings error:", err);
     }
   }, [normalizeBuildingsGeoJson]);
 
@@ -180,6 +208,7 @@ const PProjectCreate = () => {
       setLng(newLng);
       setLat(newLat);
     } catch (e) {
+      console.log("onMapIdle error:", e);
     }
   }, []);
 
@@ -315,21 +344,6 @@ const PProjectCreate = () => {
     [getFeatureBounds, getFeatureCenterFromBounds]
   );
 
-  const clearSelectedBuildingState = useCallback(async () => {
-    if (!selectedFeatureIdRef.current || !mapRef.current) return;
-
-    try {
-      await mapRef.current.removeFeatureState(
-        selectedFeatureIdRef.current,
-        null,
-        "buildings"
-      );
-    } catch (e) {
-    } finally {
-      selectedFeatureIdRef.current = null;
-    }
-  }, []);
-
   const focusBuildingById = useCallback(
     async (buildingId, options = {}) => {
       if (!buildingId || !buildingsGeoJson?.features?.length) return;
@@ -342,21 +356,9 @@ const PProjectCreate = () => {
 
       const bounds = getFeatureBounds(feature);
       const featureCenter = getFeatureCenterFromBounds(bounds);
-      const nextLocation = `${featureCenter[1].toFixed(6)}, ${featureCenter[0].toFixed(6)}`;
+      const nextLocation = `${featureCenter[0].toFixed(6)}, ${featureCenter[1].toFixed(6)}`;
 
       const previousBuildingId = item?.buildingId;
-
-      await clearSelectedBuildingState();
-
-      try {
-        await mapRef.current?.setFeatureState(
-          feature.id,
-          { selected: true },
-          "buildings"
-        );
-        selectedFeatureIdRef.current = feature.id;
-      } catch (e) {
-      }
 
       setSelectedBuildingFeature(feature);
 
@@ -401,15 +403,26 @@ const PProjectCreate = () => {
       });
       setIsDrawingRoof(false);
       setIsSelectingBuilding(false);
-      setShowAction(true);
+
+      if (typeof options.showAction === "boolean") {
+        if (options.showAction) {
+          openModal();
+        } else {
+          closeModal();
+        }
+      } else {
+        openModal();
+      }
+
       buildingSelectionSnapshotRef.current = null;
     },
     [
       buildingsGeoJson,
-      clearSelectedBuildingState,
       getFeatureBounds,
       getFeatureCenterFromBounds,
       item?.buildingId,
+      openModal,
+      closeModal,
     ]
   );
 
@@ -424,7 +437,7 @@ const PProjectCreate = () => {
       pitch: INITIAL_PITCH,
       bearing: INITIAL_BEARING,
       animationDuration: 0,
-      showAction: false,
+      showAction: true,
     });
   }, [
     buildingsGeoJson,
@@ -435,8 +448,6 @@ const PProjectCreate = () => {
   ]);
 
   const resetMapToInitialState = useCallback(async () => {
-    await clearSelectedBuildingState();
-
     setSelectedBuildingFeature(null);
     setRoofPoints([]);
     setRoofResult({
@@ -455,14 +466,13 @@ const PProjectCreate = () => {
     }));
 
     flyToInitial(800);
-  }, [clearSelectedBuildingState, flyToInitial]);
+  }, [flyToInitial]);
 
   const selectBuilding = useCallback(
     async (projectFromModal) => {
       buildingSelectionSnapshotRef.current = {
         item: projectFromModal || item || {},
         selectedBuildingFeature,
-        selectedFeatureId: selectedFeatureIdRef.current,
         selectedBuildingCamera: selectedBuildingCameraRef.current,
       };
 
@@ -473,14 +483,14 @@ const PProjectCreate = () => {
         area: 0,
       });
       setIsDrawingRoof(false);
-      setShowAction(false);
+      closeModal();
       setIsSelectingBuilding(true);
 
       if (selectedBuildingFeature) {
         focusSelectedBuildingAngled(selectedBuildingFeature, 400);
       }
     },
-    [item, selectedBuildingFeature, focusSelectedBuildingAngled]
+    [item, selectedBuildingFeature, focusSelectedBuildingAngled, closeModal]
   );
 
   const cancelBuildingSelection = useCallback(async () => {
@@ -493,7 +503,7 @@ const PProjectCreate = () => {
     });
     setIsDrawingRoof(false);
     setIsSelectingBuilding(false);
-    setShowAction(true);
+    openModal();
 
     if (!snapshot) {
       return;
@@ -508,31 +518,18 @@ const PProjectCreate = () => {
         bearing: INITIAL_BEARING,
       };
 
-    await clearSelectedBuildingState();
-
     const previousBuildingFeature = snapshot.selectedBuildingFeature;
 
     if (previousBuildingFeature) {
-      try {
-        await mapRef.current?.setFeatureState(
-          previousBuildingFeature.id,
-          { selected: true },
-          "buildings"
-        );
-        selectedFeatureIdRef.current = previousBuildingFeature.id;
-      } catch (e) {
-      }
-
       setSelectedBuildingFeature(previousBuildingFeature);
       focusSelectedBuildingAngled(previousBuildingFeature, 600);
     } else {
       setSelectedBuildingFeature(null);
-      selectedFeatureIdRef.current = null;
       flyToInitial(800);
     }
 
     buildingSelectionSnapshotRef.current = null;
-  }, [clearSelectedBuildingState, focusSelectedBuildingAngled, flyToInitial]);
+  }, [focusSelectedBuildingAngled, flyToInitial, openModal]);
 
   const finishRoofDrawing = useCallback(() => {
     if (roofPoints.length < 3) return;
@@ -558,7 +555,7 @@ const PProjectCreate = () => {
     }));
 
     setIsDrawingRoof(false);
-    setShowAction(true);
+    openModal();
 
     if (selectedBuildingFeature) {
       focusSelectedBuildingAngled(selectedBuildingFeature, 600);
@@ -569,12 +566,13 @@ const PProjectCreate = () => {
     polygonToWkt,
     roofPoints,
     selectedBuildingFeature,
+    openModal,
   ]);
 
   const startRoofDrawing = useCallback(() => {
     if (!selectedBuildingFeature) return;
 
-    setShowAction(false);
+    closeModal();
     setIsSelectingBuilding(false);
     setIsDrawingRoof(true);
     setRoofPoints([]);
@@ -584,7 +582,7 @@ const PProjectCreate = () => {
     });
 
     focusSelectedBuildingTopDown(selectedBuildingFeature, 1000);
-  }, [focusSelectedBuildingTopDown, selectedBuildingFeature]);
+  }, [focusSelectedBuildingTopDown, selectedBuildingFeature, closeModal]);
 
   const cancelRoofDrawing = useCallback(() => {
     setIsDrawingRoof(false);
@@ -596,12 +594,12 @@ const PProjectCreate = () => {
       setRoofCancelResetKey((prev) => prev + 1);
     }
 
-    setShowAction(true);
+    openModal();
 
     if (selectedBuildingFeature) {
       focusSelectedBuildingAngled(selectedBuildingFeature, 600);
     }
-  }, [focusSelectedBuildingAngled, item?.roofArea, selectedBuildingFeature]);
+  }, [focusSelectedBuildingAngled, item?.roofArea, selectedBuildingFeature, openModal]);
 
   const handleModalTabChange = useCallback(
     (tabData) => {
@@ -674,18 +672,48 @@ const PProjectCreate = () => {
   }, [roofPoints]);
 
   const visibleBuildingsGeoJson = useMemo(() => {
+    if (!buildingsGeoJson?.features) return null;
+
+    const selectedId = selectedBuildingFeature?.id;
+
     if (isSelectingBuilding) {
-      return buildingsGeoJson;
+      return {
+        ...buildingsGeoJson,
+        features: buildingsGeoJson.features.map((feature) => ({
+          ...feature,
+          properties: {
+            ...feature.properties,
+            selected: String(feature.id) === String(selectedId),
+          },
+        })),
+      };
     }
 
     if (selectedBuildingFeature) {
       return {
         type: "FeatureCollection",
-        features: [selectedBuildingFeature],
+        features: [
+          {
+            ...selectedBuildingFeature,
+            properties: {
+              ...selectedBuildingFeature.properties,
+              selected: true,
+            },
+          },
+        ],
       };
     }
 
-    return buildingsGeoJson;
+    return {
+      ...buildingsGeoJson,
+      features: buildingsGeoJson.features.map((feature) => ({
+        ...feature,
+        properties: {
+          ...feature.properties,
+          selected: false,
+        },
+      })),
+    };
   }, [buildingsGeoJson, selectedBuildingFeature, isSelectingBuilding]);
 
   const getProjectById = useCallback((id) => {
@@ -693,6 +721,7 @@ const PProjectCreate = () => {
       .then((result) => {
         if (result.isSuccess) {
           setItem(result.data);
+          openModal();
         } else {
           setItem({});
         }
@@ -700,7 +729,7 @@ const PProjectCreate = () => {
       .catch(() => {
         setItem({});
       });
-  }, []);
+  }, [openModal]);
 
   return (
     <SafeAreaView
@@ -769,7 +798,10 @@ const PProjectCreate = () => {
           )}
 
           {isDrawingRoof && roofPolygonGeoJson && (
-            <Mapbox.ShapeSource id="roof-drawing-source" shape={roofPolygonGeoJson}>
+            <Mapbox.ShapeSource
+              id="roof-drawing-source"
+              shape={roofPolygonGeoJson}
+            >
               <Mapbox.FillLayer
                 id="roof-drawing-fill"
                 style={{
@@ -924,21 +956,18 @@ const PProjectCreate = () => {
         </View>
       </View>
 
-      <ModalProject
-        project={item}
-        navigation={navigation}
-        onPress={selectBuilding}
-        onTabChange={handleModalTabChange}
-        isVisible={showAction}
-        isProccessSuccess={getProjectById}
-        roofCancelResetKey={roofCancelResetKey}
-        onSwipeComplete={() => {
-          setShowAction(false);
-        }}
-        onBackdropPress={() => {
-          setShowAction(false);
-        }}
-      />
+      {showAction && (
+        <ModalProject
+          key={`${item?.id ? `edit-${item.id}` : "create-project"}-${modalRenderKey}`}
+          project={item}
+          navigation={navigation}
+          onPress={selectBuilding}
+          onTabChange={handleModalTabChange}
+          isVisible={true}
+          isProccessSuccess={getProjectById}
+          roofCancelResetKey={roofCancelResetKey}
+        />
+      )}
     </SafeAreaView>
   );
 };

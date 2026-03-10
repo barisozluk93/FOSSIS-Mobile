@@ -95,9 +95,9 @@ packagingOptions {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.klcsoft.fossis'
+    namespace 'com.klcsoft.fossis3d'
     defaultConfig {
-        applicationId 'com.klcsoft.fossis'
+        applicationId 'com.klcsoft.fossis3d'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

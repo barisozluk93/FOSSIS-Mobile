@@ -1,4 +1,4 @@
-package com.klcsoft.fossis
+package com.klcsoft.fossis3d
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

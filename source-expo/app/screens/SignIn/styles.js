@@ -21,8 +21,8 @@ export default StyleSheet.create({
     justifyContent: 'space-between',
   },
   logo: {
-    width: 100,
-    height: 100,
+    width: 200,
+    height: 200,
     borderRadius: 20,
     overflow: 'hidden',
   },

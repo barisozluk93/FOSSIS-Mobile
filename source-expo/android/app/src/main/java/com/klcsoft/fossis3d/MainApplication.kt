@@ -1,4 +1,4 @@
-package com.klcsoft.fossis
+package com.klcsoft.fossis3d
 
 import android.app.Application
 import android.content.res.Configuration

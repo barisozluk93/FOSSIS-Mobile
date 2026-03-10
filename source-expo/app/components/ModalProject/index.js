@@ -32,13 +32,25 @@ const EMPTY_STYLE = {
 
 const DEFAULT_CENTER = [28.9741, 41.0256];
 
+const successMainInit = {
+  name: true,
+  location: true,
+};
+
+const successPlanningInit = {
+  gridSpace: true,
+  margin: true,
+  panelId: true,
+};
+
 const ModalProject = (props) => {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const cardColor = colors.card;
 
   const {
-    project = undefined,
+    project = {},
+    isVisible = false,
     isProccessSuccess,
     roofCancelResetKey,
     navigation,
@@ -51,6 +63,7 @@ const ModalProject = (props) => {
   const { user } = useSelector((state) => state.user);
 
   const roofCameraRef = useRef(null);
+  const initializedProjectRef = useRef(null);
 
   const [id, setId] = useState(0);
   const [buildingId, setBuildingId] = useState('');
@@ -63,12 +76,18 @@ const ModalProject = (props) => {
   const [panelId, setPanelId] = useState(undefined);
   const [systemPower, setSystemPower] = useState(0);
   const [numberOfSufficientPanel, setNumberOfSufficientPanel] = useState(0);
-
   const [header, setHeader] = useState('');
+  const [successMain, setSuccessMain] = useState(successMainInit);
+  const [successPlanning, setSuccessPlanning] = useState(successPlanningInit);
 
   const tabs = useMemo(() => {
-    const hasProjectId = Number(project?.id) > 0;
-    const hasRoofArea = project?.roofArea !== undefined && project?.roofArea !== null;
+    const hasProjectId =
+      Number(project?.id) > 0 &&
+      !isNullOrEmpty(name) &&
+      !isNullOrEmpty(location);
+
+    const hasRoofArea =
+      project?.roofArea !== undefined && project?.roofArea !== null;
 
     return [
       {
@@ -87,14 +106,22 @@ const ModalProject = (props) => {
         disabled: !(hasProjectId && hasRoofArea),
       },
     ];
-  }, [project?.id, project?.roofArea, t]);
+  }, [project?.id, project?.roofArea, name, location, t]);
 
-  const [tab, setTab] = useState(tabs[0]);
+  const [tab, setTab] = useState({
+    id: 'main_info',
+    title: t('main_infos'),
+    disabled: false,
+  });
 
   const getReport = () => {
-    project.systemPower = systemPower;
-    navigation.navigate('PProjectReport', { item: project });
-  }
+    const nextProject = {
+      ...(project || {}),
+      systemPower,
+    };
+
+    navigation.navigate('PProjectReport', { item: nextProject });
+  };
 
   useEffect(() => {
     const activeTab = tabs.find((item) => item.id === tab?.id);
@@ -113,7 +140,7 @@ const ModalProject = (props) => {
   }, [roofCancelResetKey, project?.roofArea, tabs]);
 
   useEffect(() => {
-    if (project && project.id > 0) {
+    if (project && Number(project.id) > 0) {
       setHeader(t('edit_project'));
       setId(project.id);
       setBuildingId(project.buildingId || '');
@@ -122,7 +149,7 @@ const ModalProject = (props) => {
       setPanelId(project.panelId || undefined);
       setGridSpace(project.gridSpace ?? 0);
       setMargin(project.margin ?? 0);
-      setSystemPower(project.systemPower ?? 0)
+      setSystemPower(project.systemPower ?? 0);
     } else {
       setHeader(t('create_project'));
       setId(project?.id || 0);
@@ -132,9 +159,27 @@ const ModalProject = (props) => {
       setPanelId(project?.panelId || undefined);
       setGridSpace(project?.gridSpace ?? 0);
       setMargin(project?.margin ?? 0);
-      setSystemPower(project?.systemPower ?? 0)
+      setSystemPower(project?.systemPower ?? 0);
     }
-  }, [project, t]);
+
+    setSuccessMain(successMainInit);
+    setSuccessPlanning(successPlanningInit);
+
+    const projectKey = `${project?.id || 0}-${project?.roofArea || 0}-${project?.roofWkt || ''}`;
+
+    if (initializedProjectRef.current !== projectKey) {
+      initializedProjectRef.current = projectKey;
+
+      const roofTab = tabs.find((x) => x.id === 'roof_style');
+      const mainTab = tabs.find((x) => x.id === 'main_info') || tabs[0];
+
+      if (Number(project?.roofArea || 0) > 0 && roofTab && !roofTab.disabled) {
+        setTab(roofTab);
+      } else {
+        setTab(mainTab);
+      }
+    }
+  }, [project, t, tabs]);
 
   useEffect(() => {
     allPanelsRequest()
@@ -142,16 +187,24 @@ const ModalProject = (props) => {
         if (result.isSuccess) {
           const temp = result.data.map((item) => ({
             key: item.id,
-            name: item.model + ' - ' + item.series,
+            name: `${item.model} - ${item.series}`,
             length: item.length,
             width: item.width,
             maximumDCPower: item.maximumDCPower,
           }));
 
+          temp.unshift({
+            key: undefined,
+            name: t('select'),
+          });
+
           setPanels(temp);
 
           const selectedPanelId = project?.panelId || panelId;
-          const selectedPanel = temp.find((f) => String(f.key) === String(selectedPanelId));
+          const selectedPanel = temp.find(
+            (f) => String(f.key) === String(selectedPanelId)
+          );
+
           setPanel(selectedPanel);
         } else {
           setPanels([]);
@@ -162,13 +215,14 @@ const ModalProject = (props) => {
         setPanels([]);
         setPanel(undefined);
       });
-  }, [project?.panelId, panelId]);
+  }, [project?.panelId, panelId, t]);
 
   const onChangeTab = (tabData) => {
     if (tabData?.disabled) return;
+
     setTab(tabData);
 
-    if (!(tabData?.id === 'roof_style' && project?.roofArea > 0)) {
+    if (!(tabData?.id === 'roof_style' && Number(project?.roofArea) > 0)) {
       onTabChange?.(tabData);
     }
   };
@@ -192,7 +246,6 @@ const ModalProject = (props) => {
     if (!Array.isArray(coords) || coords.length < 4) return null;
 
     const cleaned = [...coords];
-
     const first = cleaned[0];
     const last = cleaned[cleaned.length - 1];
 
@@ -255,6 +308,7 @@ const ModalProject = (props) => {
     const px =
       ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) /
       denom;
+
     const py =
       ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) /
       denom;
@@ -274,10 +328,7 @@ const ModalProject = (props) => {
       y: lat * meterPerDegLat,
     });
 
-    const toLngLat = ({ x, y }) => [
-      x / meterPerDegLng,
-      y / meterPerDegLat,
-    ];
+    const toLngLat = ({ x, y }) => [x / meterPerDegLng, y / meterPerDegLat];
 
     const ring = points.map(toMeters);
     const orientation = getPolygonOrientation(points);
@@ -316,7 +367,8 @@ const ModalProject = (props) => {
 
     const result = [];
     for (let i = 0; i < shiftedLines.length; i += 1) {
-      const prev = shiftedLines[(i - 1 + shiftedLines.length) % shiftedLines.length];
+      const prev =
+        shiftedLines[(i - 1 + shiftedLines.length) % shiftedLines.length];
       const curr = shiftedLines[i];
       result.push(lineIntersection(prev.a, prev.b, curr.a, curr.b));
     }
@@ -335,11 +387,6 @@ const ModalProject = (props) => {
   };
 
   useEffect(() => {
-    project.panel = panel;
-    project.panelId = panelId;
-    project.gridSpace = gridSpace;
-    project.margin = margin;
-
     if (!panel) {
       setNumberOfSufficientPanel(0);
       setSystemPower(0);
@@ -385,11 +432,14 @@ const ModalProject = (props) => {
 
     if (gridSpaceNumber > 0) {
       if (panel.length === panel.width) {
-        const effectiveArea = Math.pow(Math.sqrt(panelArea) + (gridSpaceNumber / 100), 2);
+        const effectiveArea = Math.pow(
+          Math.sqrt(panelArea) + gridSpaceNumber / 100,
+          2
+        );
         count = Math.floor(area / effectiveArea);
       } else {
-        const lengthWithGap = panelLengthM + (gridSpaceNumber / 100);
-        const widthWithGap = panelWidthM + (gridSpaceNumber / 100);
+        const lengthWithGap = panelLengthM + gridSpaceNumber / 100;
+        const widthWithGap = panelWidthM + gridSpaceNumber / 100;
         const effectiveArea = lengthWithGap * widthWithGap;
         count = Math.floor(area / effectiveArea);
       }
@@ -405,13 +455,22 @@ const ModalProject = (props) => {
 
   const submit = () => {
     if (tab.id === 'main_info') {
+      if (isNullOrEmpty(name) || isNullOrEmpty(location)) {
+        setSuccessMain({
+          ...successMain,
+          name: !isNullOrEmpty(name),
+          location: !isNullOrEmpty(location),
+        });
+        return;
+      }
+
       const data = {
-        id: id,
+        id,
         isDeleted: false,
         userId: user.id,
-        name: name,
+        name,
         buildingId: Number(buildingId),
-        location: location,
+        location,
       };
 
       saveRequest(data)
@@ -439,41 +498,64 @@ const ModalProject = (props) => {
             text2: err?.message || t('pw_didnt_match_message'),
           });
         });
-    } else {
-      if (tab.id === 'planning') {
-        project.panelId = panelId;
-        project.gridSpace = Number(gridSpace || 0);
-        project.margin = Number(margin || 0);
-        project.systemPower = systemPower;
-        project.panel = undefined;
+
+      return;
+    }
+
+    if (tab.id === 'planning') {
+      if (
+        isNullOrEmpty(panelId) ||
+        isNullOrEmpty(gridSpace) ||
+        isNullOrEmpty(margin)
+      ) {
+        setSuccessPlanning({
+          ...successPlanning,
+          panelId: !isNullOrEmpty(panelId),
+          gridSpace: !isNullOrEmpty(gridSpace),
+          margin: !isNullOrEmpty(margin),
+        });
+        return;
       }
+    } else {
+      if (isNullOrEmpty(project?.roofArea) || isNullOrEmpty(project?.roofWkt)) {
+        return;
+      }
+    }
 
-      editRequest(project)
-        .then((result) => {
-          if (result.isSuccess) {
-            Toast.show({
-              type: 'success',
-              text1: t('success'),
-              text2: t('success_message'),
-            });
+    const payload = {
+      ...(project || {}),
+      panelId,
+      gridSpace: Number(gridSpace || 0),
+      margin: Number(margin || 0),
+      systemPower,
+      panel: undefined,
+    };
 
-            isProccessSuccess?.(result.data.id);
-          } else {
-            Toast.show({
-              type: 'error',
-              text1: t('error'),
-              text2: result?.message || t('pw_didnt_match_message'),
-            });
-          }
-        })
-        .catch((error) => {
+    editRequest(payload)
+      .then((result) => {
+        if (result.isSuccess) {
+          Toast.show({
+            type: 'success',
+            text1: t('success'),
+            text2: t('success_message'),
+          });
+
+          isProccessSuccess?.(result.data.id);
+        } else {
           Toast.show({
             type: 'error',
             text1: t('error'),
-            text2: error?.message || t('pw_didnt_match_message'),
+            text2: result?.message || t('pw_didnt_match_message'),
           });
+        }
+      })
+      .catch((error) => {
+        Toast.show({
+          type: 'error',
+          text1: t('error'),
+          text2: error?.message || t('pw_didnt_match_message'),
         });
-    }
+      });
   };
 
   const parsePolygonWkt = (wktText) => {
@@ -515,7 +597,7 @@ const ModalProject = (props) => {
           },
         ],
       };
-    } catch (error) {
+    } catch {
       return null;
     }
   };
@@ -567,6 +649,7 @@ const ModalProject = (props) => {
     if (tab.id !== 'roof_style') return;
     if (!roofPolygonBounds) return;
     if (!roofCameraRef.current) return;
+    if (!isVisible) return;
 
     const timer = setTimeout(() => {
       roofCameraRef.current?.fitBounds(
@@ -578,19 +661,38 @@ const ModalProject = (props) => {
     }, 150);
 
     return () => clearTimeout(timer);
-  }, [roofPolygonBounds, tab.id]);
+  }, [roofPolygonBounds, tab.id, isVisible]);
 
   const changeRoof = () => {
-    onTabChange?.({ id: 'roof_style', title: 'roof_style', disabled: false });
+    const roofTab = tabs.find((x) => x.id === 'roof_style');
+    if (roofTab) {
+      setTab(roofTab);
+    }
+
+    onTabChange?.({
+      id: 'roof_style',
+      title: 'roof_style',
+      disabled: false,
+    });
   };
 
   return (
-    <Modal style={styles.bottomModal} {...attrs}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={[styles.contentFilterBottom, { backgroundColor: cardColor }]}>
-          <View style={styles.contentSwipeDown}>
-            <View style={styles.lineSwipeDown} />
-          </View>
+    <Modal
+      isVisible={isVisible}
+      style={styles.bottomModal}
+      hasBackdrop={false}
+      avoidKeyboard
+      useNativeDriver={false}
+      hideModalContentWhileAnimating={false}
+      statusBarTranslucent
+      {...attrs}
+    >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View
+          style={[styles.contentFilterBottom, { backgroundColor: cardColor }]}
+        >
 
           <Header
             style={{
@@ -612,7 +714,12 @@ const ModalProject = (props) => {
           <ScrollView
             keyboardShouldPersistTaps="always"
             showsVerticalScrollIndicator={false}
-            style={{ height: heightTabView() - 600 }}
+            style={{
+              height:
+                Platform.OS === 'ios'
+                  ? heightTabView() - 400
+                  : heightTabView() - 600,
+            }}
           >
             <View
               style={{
@@ -638,6 +745,7 @@ const ModalProject = (props) => {
                 >
                   {t('name')}
                 </Text>
+
                 <TextInput
                   style={{
                     borderWidth: StyleSheet.hairlineWidth,
@@ -647,7 +755,9 @@ const ModalProject = (props) => {
                   onChangeText={(text) => setName(text)}
                   autoCorrect={false}
                   placeholder={t('name')}
-                  placeholderTextColor={BaseColor.grayColor}
+                  placeholderTextColor={
+                    successMain.name ? BaseColor.grayColor : colors.primary
+                  }
                   value={name}
                 />
 
@@ -660,6 +770,7 @@ const ModalProject = (props) => {
                 >
                   {t('location')}
                 </Text>
+
                 <View
                   style={{
                     flexDirection: 'row',
@@ -683,7 +794,11 @@ const ModalProject = (props) => {
                       value={location}
                       editable={false}
                       placeholder={t('location')}
-                      placeholderTextColor={BaseColor.grayColor}
+                      placeholderTextColor={
+                        successMain.location
+                          ? BaseColor.grayColor
+                          : colors.primary
+                      }
                     />
                   </View>
 
@@ -715,7 +830,7 @@ const ModalProject = (props) => {
               </>
             )}
 
-            {tab.id === 'roof_style' && project.roofArea > 0 && (
+            {tab.id === 'roof_style' && Number(project?.roofArea) > 0 && (
               <View style={{ paddingVertical: 12 }}>
                 <Text
                   title
@@ -757,7 +872,9 @@ const ModalProject = (props) => {
 
                     <Mapbox.RasterSource
                       id="roof-osm-source"
-                      tileUrlTemplates={['https://tile.openstreetmap.org/{z}/{x}/{y}.png']}
+                      tileUrlTemplates={[
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      ]}
                       tileSize={256}
                       maxZoomLevel={19}
                     >
@@ -795,7 +912,7 @@ const ModalProject = (props) => {
 
             {tab.id === 'planning' && (
               <>
-                {panels && (
+                {panels?.length > 0 && (
                   <PickerSelect
                     style={{
                       borderWidth: StyleSheet.hairlineWidth,
@@ -807,6 +924,11 @@ const ModalProject = (props) => {
                       setPanel(v);
                       setPanelId(v?.key);
                     }}
+                    placeholderTextColor={
+                      successPlanning.panelId
+                        ? BaseColor.grayColor
+                        : colors.primary
+                    }
                     options={panels}
                   />
                 )}
@@ -823,6 +945,7 @@ const ModalProject = (props) => {
                     >
                       {t('gridspace')}
                     </Text>
+
                     <TextInput
                       style={[
                         styles.textInputName,
@@ -836,7 +959,11 @@ const ModalProject = (props) => {
                       onChangeText={(text) => setGridSpace(text)}
                       autoCorrect={false}
                       placeholder={t('gridspace')}
-                      placeholderTextColor={BaseColor.grayColor}
+                      placeholderTextColor={
+                        successPlanning.gridSpace
+                          ? BaseColor.grayColor
+                          : colors.primary
+                      }
                       value={String(gridSpace ?? '')}
                     />
                   </View>
@@ -852,6 +979,7 @@ const ModalProject = (props) => {
                     >
                       {t('margin')}
                     </Text>
+
                     <TextInput
                       style={[
                         styles.textInputName,
@@ -864,7 +992,11 @@ const ModalProject = (props) => {
                       onChangeText={(text) => setMargin(text)}
                       autoCorrect={false}
                       placeholder={t('margin')}
-                      placeholderTextColor={BaseColor.grayColor}
+                      placeholderTextColor={
+                        successPlanning.margin
+                          ? BaseColor.grayColor
+                          : colors.primary
+                      }
                       value={String(margin ?? '')}
                     />
                   </View>
@@ -883,6 +1015,7 @@ const ModalProject = (props) => {
                       >
                         {t('numberOfSufficientPanel')}
                       </Text>
+
                       <TextInput
                         style={[
                           styles.textInputName,
@@ -912,6 +1045,7 @@ const ModalProject = (props) => {
                       >
                         {t('systemPower')}
                       </Text>
+
                       <TextInput
                         style={[
                           styles.textInputName,
@@ -977,7 +1111,11 @@ const ModalProject = (props) => {
             <Button
               style={{
                 flex: 1,
-                width: ((tab?.id === 'roof_style' && project?.roofArea) || (tab?.id === 'planning' && project?.panelId)) ? '48.5%' : '100%',
+                width:
+                  ((tab?.id === 'roof_style' && project?.roofArea) ||
+                    (tab?.id === 'planning' && project?.panelId))
+                    ? '48.5%'
+                    : '100%',
                 height: 45,
                 marginTop: 15,
               }}
@@ -994,6 +1132,7 @@ const ModalProject = (props) => {
 
 ModalProject.propTypes = {
   project: PropTypes.object,
+  isVisible: PropTypes.bool,
   isProccessSuccess: PropTypes.func,
   navigation: PropTypes.object,
   onPress: PropTypes.func,

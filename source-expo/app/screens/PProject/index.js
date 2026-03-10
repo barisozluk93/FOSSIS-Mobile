@@ -22,7 +22,7 @@ const PProject = (props) => {
   const [selectedItem, setSelectedIdtem] = useState(undefined);
 
   const fetchProjects = () => {
-    dispatch(pagingProject(currentPage, 5, searchTerm, user ? user.id : 0));
+    dispatch(pagingProject(currentPage, 5, searchTerm, user ? user.id : 0, user.roles.includes(1)));
   }
 
   useFocusEffect(

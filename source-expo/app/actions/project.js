@@ -1,10 +1,10 @@
 import { pagingProjectRequest } from "@/apis/projectApi";
 
 
-export const pagingProject = (page, pageSize, searchTerm, userId) => async (dispatch) => {
+export const pagingProject = (page, pageSize, searchTerm, userId, isAdmin) => async (dispatch) => {
   try {
     dispatch({ type: 'PROJECT_PAGING_REQUEST' });
-    const data = await pagingProjectRequest(page, pageSize, searchTerm, userId);
+    const data = await pagingProjectRequest(page, pageSize, searchTerm, userId, isAdmin);
     data.data.page = page;
     data.data.pageSize = pageSize;
 

@@ -1,7 +1,7 @@
 import api from './axiosClient';
 
-export const pagingProjectRequest = async (page, pageSize, searchTerm, userId) => {
-    const response = await api.get(`Project/Paginate/${userId}`, {
+export const pagingProjectRequest = async (page, pageSize, searchTerm, userId, isAdmin) => {
+    const response = await api.get(`Project/Paginate/${userId}/${isAdmin}`, {
       params: {
         PageNumber: page,
         PageSize: pageSize,
