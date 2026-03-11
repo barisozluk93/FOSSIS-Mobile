@@ -43,6 +43,25 @@ const successPlanningInit = {
   panelId: true,
 };
 
+const getInitialTab = (project, t) => {
+  const hasProjectId = Number(project?.id) > 0;
+  const hasRoofArea = Number(project?.roofArea || 0) > 0;
+
+  if (hasProjectId && hasRoofArea) {
+    return {
+      id: 'roof_style',
+      title: t('roof_style'),
+      disabled: false,
+    };
+  }
+
+  return {
+    id: 'main_info',
+    title: t('main_infos'),
+    disabled: false,
+  };
+};
+
 const ModalProject = (props) => {
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -63,22 +82,25 @@ const ModalProject = (props) => {
   const { user } = useSelector((state) => state.user);
 
   const roofCameraRef = useRef(null);
-  const initializedProjectRef = useRef(null);
+  const lastLoadKeyRef = useRef('');
 
-  const [id, setId] = useState(0);
-  const [buildingId, setBuildingId] = useState('');
-  const [location, setLocation] = useState('');
-  const [name, setName] = useState('');
-  const [gridSpace, setGridSpace] = useState(0);
-  const [margin, setMargin] = useState(0);
+  const [id, setId] = useState(project?.id || 0);
+  const [buildingId, setBuildingId] = useState(project?.buildingId || '');
+  const [location, setLocation] = useState(project?.location || '');
+  const [name, setName] = useState(project?.name || '');
+  const [gridSpace, setGridSpace] = useState(project?.gridSpace ?? 0);
+  const [margin, setMargin] = useState(project?.margin ?? 0);
   const [panels, setPanels] = useState([]);
   const [panel, setPanel] = useState(undefined);
-  const [panelId, setPanelId] = useState(undefined);
-  const [systemPower, setSystemPower] = useState(0);
+  const [panelId, setPanelId] = useState(project?.panelId || undefined);
+  const [systemPower, setSystemPower] = useState(project?.systemPower ?? 0);
   const [numberOfSufficientPanel, setNumberOfSufficientPanel] = useState(0);
-  const [header, setHeader] = useState('');
+  const [header, setHeader] = useState(
+    Number(project?.id) > 0 ? t('edit_project') : t('create_project')
+  );
   const [successMain, setSuccessMain] = useState(successMainInit);
   const [successPlanning, setSuccessPlanning] = useState(successPlanningInit);
+  const [tab, setTab] = useState(() => getInitialTab(project, t));
 
   const tabs = useMemo(() => {
     const hasProjectId =
@@ -108,15 +130,12 @@ const ModalProject = (props) => {
     ];
   }, [project?.id, project?.roofArea, name, location, t]);
 
-  const [tab, setTab] = useState({
-    id: 'main_info',
-    title: t('main_infos'),
-    disabled: false,
-  });
-
   const getReport = () => {
     const nextProject = {
       ...(project || {}),
+      panelId,
+      gridSpace: Number(gridSpace || 0),
+      margin: Number(margin || 0),
       systemPower,
     };
 
@@ -127,9 +146,81 @@ const ModalProject = (props) => {
     const activeTab = tabs.find((item) => item.id === tab?.id);
 
     if (!activeTab || activeTab.disabled) {
-      setTab(tabs[0]);
+      if (Number(project?.roofArea || 0) > 0) {
+        const roofTab = tabs.find((x) => x.id === 'roof_style');
+        setTab(roofTab || tabs[0]);
+      } else {
+        setTab(tabs[0]);
+      }
     }
-  }, [tabs, tab]);
+  }, [tabs, tab, project?.roofArea]);
+
+  useEffect(() => {
+    if (!isVisible) return;
+
+    const loadKey = JSON.stringify({
+      id: project?.id || 0,
+      buildingId: project?.buildingId || '',
+      location: project?.location || '',
+      name: project?.name || '',
+      panelId: project?.panelId || '',
+      gridSpace: project?.gridSpace ?? 0,
+      margin: project?.margin ?? 0,
+      systemPower: project?.systemPower ?? 0,
+      roofArea: project?.roofArea ?? 0,
+      roofWkt: project?.roofWkt || '',
+    });
+
+    if (lastLoadKeyRef.current === loadKey) return;
+    lastLoadKeyRef.current = loadKey;
+
+    if (Number(project?.id) > 0) {
+      setHeader(t('edit_project'));
+    } else {
+      setHeader(t('create_project'));
+    }
+
+    setId(project?.id || 0);
+    setBuildingId(project?.buildingId || '');
+    setLocation(project?.location || '');
+    setName(project?.name || '');
+    setPanelId(project?.panelId || undefined);
+    setGridSpace(project?.gridSpace ?? 0);
+    setMargin(project?.margin ?? 0);
+    setSystemPower(project?.systemPower ?? 0);
+
+    setSuccessMain(successMainInit);
+    setSuccessPlanning(successPlanningInit);
+
+    if (Number(project?.roofArea || 0) > 0) {
+      const roofTab = {
+        id: 'roof_style',
+        title: t('roof_style'),
+        disabled: false,
+      };
+      setTab(roofTab);
+    } else {
+      const mainTab = {
+        id: 'main_info',
+        title: t('main_infos'),
+        disabled: false,
+      };
+      setTab(mainTab);
+    }
+  }, [
+    isVisible,
+    project?.id,
+    project?.buildingId,
+    project?.location,
+    project?.name,
+    project?.panelId,
+    project?.gridSpace,
+    project?.margin,
+    project?.systemPower,
+    project?.roofArea,
+    project?.roofWkt,
+    t,
+  ]);
 
   useEffect(() => {
     if (!roofCancelResetKey) return;
@@ -138,48 +229,6 @@ const ModalProject = (props) => {
     const mainInfoTab = tabs.find((x) => x.id === 'main_info') || tabs[0];
     setTab(mainInfoTab);
   }, [roofCancelResetKey, project?.roofArea, tabs]);
-
-  useEffect(() => {
-    if (project && Number(project.id) > 0) {
-      setHeader(t('edit_project'));
-      setId(project.id);
-      setBuildingId(project.buildingId || '');
-      setLocation(project.location || '');
-      setName(project.name || '');
-      setPanelId(project.panelId || undefined);
-      setGridSpace(project.gridSpace ?? 0);
-      setMargin(project.margin ?? 0);
-      setSystemPower(project.systemPower ?? 0);
-    } else {
-      setHeader(t('create_project'));
-      setId(project?.id || 0);
-      setBuildingId(project?.buildingId || '');
-      setLocation(project?.location || '');
-      setName(project?.name || '');
-      setPanelId(project?.panelId || undefined);
-      setGridSpace(project?.gridSpace ?? 0);
-      setMargin(project?.margin ?? 0);
-      setSystemPower(project?.systemPower ?? 0);
-    }
-
-    setSuccessMain(successMainInit);
-    setSuccessPlanning(successPlanningInit);
-
-    const projectKey = `${project?.id || 0}-${project?.roofArea || 0}-${project?.roofWkt || ''}`;
-
-    if (initializedProjectRef.current !== projectKey) {
-      initializedProjectRef.current = projectKey;
-
-      const roofTab = tabs.find((x) => x.id === 'roof_style');
-      const mainTab = tabs.find((x) => x.id === 'main_info') || tabs[0];
-
-      if (Number(project?.roofArea || 0) > 0 && roofTab && !roofTab.disabled) {
-        setTab(roofTab);
-      } else {
-        setTab(mainTab);
-      }
-    }
-  }, [project, t, tabs]);
 
   useEffect(() => {
     allPanelsRequest()
@@ -693,7 +742,6 @@ const ModalProject = (props) => {
         <View
           style={[styles.contentFilterBottom, { backgroundColor: cardColor }]}
         >
-
           <Header
             style={{
               borderBottomWidth: StyleSheet.hairlineWidth,
@@ -752,7 +800,7 @@ const ModalProject = (props) => {
                     borderColor: colors.primary,
                     marginBottom: 10,
                   }}
-                  onChangeText={(text) => setName(text)}
+                  onChangeText={setName}
                   autoCorrect={false}
                   placeholder={t('name')}
                   placeholderTextColor={
@@ -956,7 +1004,7 @@ const ModalProject = (props) => {
                           marginRight: 0,
                         },
                       ]}
-                      onChangeText={(text) => setGridSpace(text)}
+                      onChangeText={setGridSpace}
                       autoCorrect={false}
                       placeholder={t('gridspace')}
                       placeholderTextColor={
@@ -989,7 +1037,7 @@ const ModalProject = (props) => {
                           marginTop: 0,
                         },
                       ]}
-                      onChangeText={(text) => setMargin(text)}
+                      onChangeText={setMargin}
                       autoCorrect={false}
                       placeholder={t('margin')}
                       placeholderTextColor={
