@@ -61,7 +61,6 @@ const PUser = () => {
 
   useFocusEffect(
     useCallback(() => {
-
       if(type && type[0]) {
         if (type[0].value === 1) {
           fetchUsers();

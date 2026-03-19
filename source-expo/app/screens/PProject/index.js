@@ -22,7 +22,7 @@ const PProject = (props) => {
   const [selectedItem, setSelectedIdtem] = useState(undefined);
 
   const fetchProjects = () => {
-    dispatch(pagingProject(currentPage, 5, searchTerm, user ? user.id : 0, user.roles.includes(1)));
+    dispatch(pagingProject(currentPage, 5, searchTerm, user ? user.id : 0, user ? user.roles.includes(1) : false));
   }
 
   useFocusEffect(
@@ -121,7 +121,7 @@ const PProject = (props) => {
           borderBottomColor: colors.border,
         }}
       >
-        <View style={{ flex: 1, alignItems: "flex-start" }}>
+        {/* <View style={{ flex: 1, alignItems: "flex-start" }}>
           <Tag
             gray
             style={{
@@ -139,7 +139,7 @@ const PProject = (props) => {
           >
             {t("filter")}
           </Tag>
-        </View>
+        </View> */}
 
         {projects && projects.length > 0 && !loading && <View
           style={{

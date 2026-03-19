@@ -45,7 +45,6 @@ const PProjectCreate = () => {
   });
 
   const [showAction, setShowAction] = useState(true);
-  const [modalRenderKey, setModalRenderKey] = useState(0);
   const [isSelectingBuilding, setIsSelectingBuilding] = useState(false);
   const [isDrawingRoof, setIsDrawingRoof] = useState(false);
 
@@ -67,20 +66,30 @@ const PProjectCreate = () => {
 
   const openModal = useCallback(() => {
     setShowAction(true);
-    setModalRenderKey((prev) => prev + 1);
   }, []);
 
   const closeModal = useCallback(() => {
     setShowAction(false);
   }, []);
 
+  const resetTransientStates = useCallback(() => {
+    setIsSelectingBuilding(false);
+    setIsDrawingRoof(false);
+    setRoofPoints([]);
+    setRoofResult({
+      wkt: "",
+      area: 0,
+    });
+  }, []);
+
   useEffect(() => {
     if (route?.params?.item) {
       setItem(route.params.item);
+      resetTransientStates();
       openModal();
       getProjectById(route.params.item.id);
     }
-  }, [route?.params?.item, openModal]);
+  }, [route?.params?.item, openModal, resetTransientStates]);
 
   useEffect(() => {
     if (item?.id) {
@@ -90,10 +99,11 @@ const PProjectCreate = () => {
 
   useFocusEffect(
     useCallback(() => {
-      if (route?.params?.item?.id) {
+      if (route?.params?.item?.id || item?.id) {
+        resetTransientStates();
         openModal();
       }
-    }, [route?.params?.item?.id, openModal])
+    }, [route?.params?.item?.id, item?.id, openModal, resetTransientStates])
   );
 
   const applyInitialCamera = useCallback(() => {
@@ -358,8 +368,6 @@ const PProjectCreate = () => {
       const featureCenter = getFeatureCenterFromBounds(bounds);
       const nextLocation = `${featureCenter[0].toFixed(6)}, ${featureCenter[1].toFixed(6)}`;
 
-      const previousBuildingId = item?.buildingId;
-
       setSelectedBuildingFeature(feature);
 
       selectedBuildingCameraRef.current = {
@@ -370,6 +378,7 @@ const PProjectCreate = () => {
       };
 
       setItem((prev) => {
+        const previousBuildingId = prev?.buildingId;
         const isBuildingChanged =
           String(previousBuildingId || "") !== String(feature.id || "");
 
@@ -420,7 +429,6 @@ const PProjectCreate = () => {
       buildingsGeoJson,
       getFeatureBounds,
       getFeatureCenterFromBounds,
-      item?.buildingId,
       openModal,
       closeModal,
     ]
@@ -446,27 +454,6 @@ const PProjectCreate = () => {
     selectedBuildingFeature,
     focusBuildingById,
   ]);
-
-  const resetMapToInitialState = useCallback(async () => {
-    setSelectedBuildingFeature(null);
-    setRoofPoints([]);
-    setRoofResult({
-      wkt: "",
-      area: 0,
-    });
-    setIsDrawingRoof(false);
-
-    setItem((prev) => ({
-      ...(prev || {}),
-      buildingId: undefined,
-      location: "",
-      roofWkt: undefined,
-      roofGeom: undefined,
-      roofArea: undefined,
-    }));
-
-    flyToInitial(800);
-  }, [flyToInitial]);
 
   const selectBuilding = useCallback(
     async (projectFromModal) => {
@@ -716,20 +703,24 @@ const PProjectCreate = () => {
     };
   }, [buildingsGeoJson, selectedBuildingFeature, isSelectingBuilding]);
 
-  const getProjectById = useCallback((id) => {
-    getByIdRequest(id)
-      .then((result) => {
-        if (result.isSuccess) {
-          setItem(result.data);
-          openModal();
-        } else {
+  const getProjectById = useCallback(
+    (id) => {
+      getByIdRequest(id)
+        .then((result) => {
+          if (result.isSuccess) {
+            setItem(result.data);
+            resetTransientStates();
+            openModal();
+          } else {
+            setItem({});
+          }
+        })
+        .catch(() => {
           setItem({});
-        }
-      })
-      .catch(() => {
-        setItem({});
-      });
-  }, [openModal]);
+        });
+    },
+    [openModal, resetTransientStates]
+  );
 
   return (
     <SafeAreaView
@@ -956,18 +947,16 @@ const PProjectCreate = () => {
         </View>
       </View>
 
-      {showAction && (
-        <ModalProject
-          key={`${item?.id ? `edit-${item.id}` : "create-project"}-${modalRenderKey}`}
-          project={item}
-          navigation={navigation}
-          onPress={selectBuilding}
-          onTabChange={handleModalTabChange}
-          isVisible={true}
-          isProccessSuccess={getProjectById}
-          roofCancelResetKey={roofCancelResetKey}
-        />
-      )}
+      <ModalProject
+        project={item}
+        navigation={navigation}
+        onPress={selectBuilding}
+        onTabChange={handleModalTabChange}
+        onClose={closeModal}
+        isVisible={showAction}
+        isProccessSuccess={getProjectById}
+        roofCancelResetKey={roofCancelResetKey}
+      />
     </SafeAreaView>
   );
 };

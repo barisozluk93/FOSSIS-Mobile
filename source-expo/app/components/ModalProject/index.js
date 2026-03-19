@@ -43,25 +43,6 @@ const successPlanningInit = {
   panelId: true,
 };
 
-const getInitialTab = (project, t) => {
-  const hasProjectId = Number(project?.id) > 0;
-  const hasRoofArea = Number(project?.roofArea || 0) > 0;
-
-  if (hasProjectId && hasRoofArea) {
-    return {
-      id: 'roof_style',
-      title: t('roof_style'),
-      disabled: false,
-    };
-  }
-
-  return {
-    id: 'main_info',
-    title: t('main_infos'),
-    disabled: false,
-  };
-};
-
 const ModalProject = (props) => {
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -75,6 +56,7 @@ const ModalProject = (props) => {
     navigation,
     onPress,
     onTabChange,
+    onClose,
     isMulti = false,
     ...attrs
   } = props;
@@ -83,6 +65,7 @@ const ModalProject = (props) => {
 
   const roofCameraRef = useRef(null);
   const lastLoadKeyRef = useRef('');
+  const pendingTabAfterReloadRef = useRef(null);
 
   const [id, setId] = useState(project?.id || 0);
   const [buildingId, setBuildingId] = useState(project?.buildingId || '');
@@ -100,7 +83,11 @@ const ModalProject = (props) => {
   );
   const [successMain, setSuccessMain] = useState(successMainInit);
   const [successPlanning, setSuccessPlanning] = useState(successPlanningInit);
-  const [tab, setTab] = useState(() => getInitialTab(project, t));
+  const [tab, setTab] = useState({
+    id: 'main_info',
+    title: t('main_infos'),
+    disabled: false,
+  });
 
   const tabs = useMemo(() => {
     const hasProjectId =
@@ -139,6 +126,7 @@ const ModalProject = (props) => {
       systemPower,
     };
 
+    onClose?.();
     navigation.navigate('PProjectReport', { item: nextProject });
   };
 
@@ -146,14 +134,9 @@ const ModalProject = (props) => {
     const activeTab = tabs.find((item) => item.id === tab?.id);
 
     if (!activeTab || activeTab.disabled) {
-      if (Number(project?.roofArea || 0) > 0) {
-        const roofTab = tabs.find((x) => x.id === 'roof_style');
-        setTab(roofTab || tabs[0]);
-      } else {
-        setTab(tabs[0]);
-      }
+      setTab(tabs[0]);
     }
-  }, [tabs, tab, project?.roofArea]);
+  }, [tabs, tab]);
 
   useEffect(() => {
     if (!isVisible) return;
@@ -174,11 +157,9 @@ const ModalProject = (props) => {
     if (lastLoadKeyRef.current === loadKey) return;
     lastLoadKeyRef.current = loadKey;
 
-    if (Number(project?.id) > 0) {
-      setHeader(t('edit_project'));
-    } else {
-      setHeader(t('create_project'));
-    }
+    setHeader(
+      Number(project?.id) > 0 ? t('edit_project') : t('create_project')
+    );
 
     setId(project?.id || 0);
     setBuildingId(project?.buildingId || '');
@@ -192,20 +173,16 @@ const ModalProject = (props) => {
     setSuccessMain(successMainInit);
     setSuccessPlanning(successPlanningInit);
 
-    if (Number(project?.roofArea || 0) > 0) {
-      const roofTab = {
-        id: 'roof_style',
-        title: t('roof_style'),
-        disabled: false,
-      };
-      setTab(roofTab);
-    } else {
-      const mainTab = {
-        id: 'main_info',
-        title: t('main_infos'),
-        disabled: false,
-      };
-      setTab(mainTab);
+    if (pendingTabAfterReloadRef.current) {
+      const nextTab = tabs.find(
+        (x) => x.id === pendingTabAfterReloadRef.current && !x.disabled
+      );
+
+      if (nextTab) {
+        setTab(nextTab);
+      }
+
+      pendingTabAfterReloadRef.current = null;
     }
   }, [
     isVisible,
@@ -219,6 +196,7 @@ const ModalProject = (props) => {
     project?.systemPower,
     project?.roofArea,
     project?.roofWkt,
+    tabs,
     t,
   ]);
 
@@ -503,6 +481,8 @@ const ModalProject = (props) => {
   }, [panel, margin, gridSpace, project?.roofGeom, project?.roofArea]);
 
   const submit = () => {
+    pendingTabAfterReloadRef.current = tab.id;
+
     if (tab.id === 'main_info') {
       if (isNullOrEmpty(name) || isNullOrEmpty(location)) {
         setSuccessMain({
@@ -1185,6 +1165,7 @@ ModalProject.propTypes = {
   navigation: PropTypes.object,
   onPress: PropTypes.func,
   onTabChange: PropTypes.func,
+  onClose: PropTypes.func,
   isMulti: PropTypes.bool,
   roofCancelResetKey: PropTypes.number,
 };
